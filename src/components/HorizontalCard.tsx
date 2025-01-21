@@ -1,34 +1,37 @@
 import React, { ReactNode } from "react"
-import Emoji from "./Emoji"
-import { Text, Box, Flex } from "@chakra-ui/react"
 
-export interface IProps {
-  children?: React.ReactNode
+import { cn } from "@/lib/utils/cn"
+
+import Emoji from "./Emoji"
+
+export interface HorizontalCardProps
+  extends Omit<React.HTMLAttributes<HTMLDivElement>, "title"> {
   emoji: string
+  emojiClassName?: string
   title?: ReactNode
   description: ReactNode
-  className?: string
-  emojiSize?: number
+  children?: ReactNode
 }
 
-const HorizontalCard: React.FC<IProps> = ({
+const HorizontalCard = ({
   emoji,
+  emojiClassName,
   title,
   description,
   children,
   className,
-  emojiSize,
-}) => (
-  <Flex borderRadius="base" className={className}>
-    <Emoji fontSize={`${emojiSize}rem`} text={emoji} />
-    <Box flexGrow="0" flexShrink="1" flexBasis="75%" ml="8">
-      <Text fontSize="lg">{title}</Text>
-      <Text opacity="0.8" mt="-4" mb="2">
-        {description}
-      </Text>
-      {children}
-    </Box>
-  </Flex>
-)
+  ...props
+}: HorizontalCardProps) => {
+  return (
+    <div className={cn("flex items-center gap-8", className)} {...props}>
+      <Emoji text={emoji} className={cn("text-5xl", emojiClassName)} />
+      <div className="flex-shrink flex-grow-0 basis-3/4 space-y-2">
+        <p className="text-lg">{title}</p>
+        <p>{description}</p>
+        {children}
+      </div>
+    </div>
+  )
+}
 
 export default HorizontalCard

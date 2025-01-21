@@ -1,109 +1,60 @@
-import React from "react"
-import styled from "@emotion/styled"
-import { GatsbyImage, IGatsbyImageData } from "gatsby-plugin-image"
+import { useTranslation } from "next-i18next"
 
-import Translation from "./Translation"
-import { TranslationKey } from "../utils/translations"
+import type { TranslationKey } from "@/lib/types"
 
-const StyledCard = styled.div`
-  display: flex;
-  flex-direction: row-reverse;
-  background: ${({ theme }) => theme.colors.layer2Gradient};
-  padding: 3rem;
-  margin: 1rem;
-  margin-top: 6rem;
-  margin-bottom: 10rem;
-  border-radius: 4px;
+import { type ImageProps, TwImage } from "@/components/Image"
 
-  @media (max-width: ${(props) => props.theme.breakpoints.l}) {
-    flex-direction: column;
-    margin-bottom: 1rem;
-    margin: 4rem 2rem;
-  }
-  @media (max-width: ${(props) => props.theme.breakpoints.s}) {
-    padding: 2rem;
-  }
-`
+import { cn } from "@/lib/utils/cn"
 
-const Content = styled.div`
-  padding-left: 2rem;
-  flex: 1 0 50%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  @media (max-width: ${(props) => props.theme.breakpoints.l}) {
-    margin-top: 2rem;
-    padding-left: 1rem;
-    flex-direction: column;
-    width: 100%;
-  }
-  @media (max-width: ${(props) => props.theme.breakpoints.s}) {
-    padding-left: 0;
-  }
-`
-
-const Description = styled.p`
-  font-size: 1.25rem;
-  width: 90%;
-  line-height: 140%;
-  margin-bottom: 2rem;
-  color: ${(props) => props.theme.colors.text200};
-`
-
-const Image = styled(GatsbyImage)<{ maximagewidth?: number }>`
-  align-self: center; /* prevents crop */
-  width: 100%;
-  max-width: ${(props) => `${props.maximagewidth}px`};
-  margin-top: -6rem;
-  margin-bottom: -6rem;
-  @media (max-width: ${(props) => props.theme.breakpoints.l}) {
-    margin-bottom: 0rem;
-    margin-top: -6rem;
-  }
-`
-
-const H2 = styled.h2`
-  margin-top: 0rem;
-`
-
-export interface IProps {
-  children?: React.ReactNode
-  image: IGatsbyImageData
-  maxImageWidth?: number
+export type CalloutBannerProps = React.HTMLAttributes<HTMLDivElement> & {
+  image: ImageProps["src"]
+  imageWidth?: number
   titleKey: TranslationKey
   descriptionKey: TranslationKey
   alt: string
-  className?: string
-  id?: string
 }
 
-const CalloutBanner: React.FC<IProps> = ({
+const CalloutBanner = ({
   image,
-  maxImageWidth,
+  imageWidth,
   titleKey,
   descriptionKey,
   alt,
   children,
   className,
-  id,
-}) => (
-  <StyledCard className={className} id={id}>
-    <Image
-      image={image}
-      alt={alt}
-      maximagewidth={maxImageWidth}
-      objectFit="contain"
-    />
-    <Content>
-      <H2>
-        <Translation id={titleKey} />
-      </H2>
-      <Description>
-        <Translation id={descriptionKey} />
-      </Description>
-      {children}
-    </Content>
-  </StyledCard>
-)
+  ...props
+}: CalloutBannerProps) => {
+  const { t } = useTranslation("page-staking")
+
+  return (
+    <aside
+      className={cn(
+        "flex flex-col rounded p-8 sm:p-12 lg:flex-row-reverse",
+        "bg-gradient-to-r from-accent-a/10 to-accent-c/10 dark:from-accent-a/20 dark:to-accent-c-hover/20",
+        className
+      )}
+      {...props}
+    >
+      <div className="flex">
+        <TwImage
+          src={image}
+          alt={alt}
+          width={imageWidth}
+          className="-my-24 mx-auto object-contain max-lg:mb-0"
+        />
+      </div>
+
+      <div className="flex w-full flex-shrink-0 flex-grow basis-1/2 flex-col justify-center sm:ps-4 lg:w-[inherit] lg:ps-8">
+        <h2 className="mb-8 text-2xl leading-xs sm:text-[2rem]">
+          {t(titleKey)}
+        </h2>
+        <p className="mb-8 w-[90%] text-xl text-body-medium">
+          {t(descriptionKey)}
+        </p>
+        {children}
+      </div>
+    </aside>
+  )
+}
 
 export default CalloutBanner

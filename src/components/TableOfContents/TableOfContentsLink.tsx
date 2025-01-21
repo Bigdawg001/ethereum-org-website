@@ -1,90 +1,74 @@
-import React from "react"
-import { Link as GatsbyLink } from "gatsby"
-import { SystemStyleObject, cssVar } from "@chakra-ui/react"
-import CustomLink from "../Link"
-import { getCustomId, Item, trimmedTitle } from "./utils"
+import { cssVar, SystemStyleObject } from "@chakra-ui/react"
 
-export interface IPropsTableOfContentsLink {
+import type { ToCItem } from "@/lib/types"
+
+import { BaseLink } from "@/components/Link"
+
+export type TableOfContentsLinkProps = {
   depth: number
-  item: Item
+  item: ToCItem
   activeHash?: string
 }
 
-const Link: React.FC<IPropsTableOfContentsLink> = ({
+const Link = ({
   depth,
-  item,
+  item: { title, url },
   activeHash,
-}) => {
-  const url = `#${getCustomId(item.title)}`
-
+}: TableOfContentsLinkProps) => {
   const isActive = activeHash === url
   const isNested = depth === 2
 
-  let classes = ""
-  if (isActive) {
-    classes += " active"
-  }
-  if (isNested) {
-    classes += " nested"
-  }
+  const classList: Array<string> = []
+  isActive && classList.push("active")
+  isNested && classList.push("nested")
+  const classes = classList.join(" ")
 
   const $dotBg = cssVar("dot-bg")
 
   const hoverOrActiveStyle: SystemStyleObject = {
-    color: "primary",
+    color: $dotBg.reference,
     _after: {
       content: `""`,
-      background: $dotBg.reference,
+      backgroundColor: "background.base",
       border: "1px",
-      borderColor: "primary",
+      borderColor: $dotBg.reference,
       borderRadius: "50%",
       boxSize: 2,
       position: "absolute",
-      left: "-1.29rem",
+      // 16px is the initial list padding
+      // 8px is the padding for each nested list
+      // 4px is half of the width of the dot
+      // 1px for the border
+      "inset-inline-start": `calc(-16px - 8px * ${depth} - 4px - 1px)`,
       top: "50%",
       mt: -1,
     },
   }
 
   return (
-    <CustomLink
-      as={GatsbyLink}
-      to={url}
+    <BaseLink
+      href={url}
       className={classes}
       textDecoration="none"
       display="inline-block"
       position="relative"
-      color="textTableOfContents"
-      mb="0.5rem !important"
+      color="body.medium"
       width={{ base: "100%", lg: "auto" }}
       _hover={{
         ...hoverOrActiveStyle,
       }}
+      p="2"
+      ps="0"
       sx={{
-        [$dotBg.variable]: "colors.background",
+        [$dotBg.variable]: "var(--eth-colors-primary-hover)",
         "&.active": {
-          [$dotBg.variable]: "colors.primary",
+          [$dotBg.variable]: "var(--eth-colors-primary-visited)",
           ...hoverOrActiveStyle,
-        },
-        "&.nested": {
-          _before: {
-            content: `"⌞"`,
-            opacity: 0.5,
-            display: "inline-flex",
-            position: "absolute",
-            left: -3.5,
-            top: -1,
-          },
-          "&.active, &:hover": {
-            _after: {
-              left: "-2.29rem",
-            },
-          },
         },
       }}
     >
-      {trimmedTitle(item.title)}
-    </CustomLink>
+      {title}
+    </BaseLink>
   )
 }
 

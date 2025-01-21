@@ -33,6 +33,9 @@
   "page-assets-future": "未来",
   "page-assets-h1": "ethereum.org 资产",
   "page-assets-hero": "ethereum.org 主图",
+  "page-assets-hero-panda": "包含 merge panda 的 ethereum.org 网站主图",
+  "page-assets-merge-panda": "Merge panda",
+  "page-assets-merge-panda-svg": "Merge panda 的可缩放矢量图形",
   "page-assets-hero-particles": "ETH 粒子图像",
   "page-assets-historical-artwork": "使用过的艺术作品",
   "page-assets-illustrations": "插图",
@@ -46,5 +49,13 @@
   "page-assets-page-assets-transparent-background": "透明背景",
   "page-assets-robot": "机器人钱包",
   "page-assets-sharding": "分片",
-  "page-assets-hackathon": "黑客松"
+  "page-assets-hackathon": "黑客松",
+  "page-assets-learn-hero-name": "未来派大学",
+  "page-assets-community-hero-name": "社区聚会",
+  "page-assets-quizzes-hero-name": "无限游乐场",
+  "page-assets-developers-hero-name": "创造未来",
+  "page-assets-garden-name": "以太坊花园",
+  "page-assets-roadmap-hero-name": "通向未来之路",
+  "page-assets-layer-2-hero-name": "构建以太坊",
+  "page-assets-guides-hero-name": "以太坊实验室"
 }

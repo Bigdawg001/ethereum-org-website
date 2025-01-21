@@ -1,36 +1,56 @@
-import React, { useState, useEffect, ReactNode } from "react"
-import { graphql, PageProps } from "gatsby"
+import { useEffect, useState } from "react"
 import makeBlockie from "ethereum-blockies-base64"
-import { useTranslation } from "gatsby-plugin-react-i18next"
+import { type GetStaticProps } from "next"
+import { useRouter } from "next/router"
+import { useTranslation } from "next-i18next"
+import { serverSideTranslations } from "next-i18next/serverSideTranslations"
 import {
   Box,
   Button,
-  ButtonProps,
+  type ButtonProps,
+  Checkbox,
   Flex,
+  forwardRef,
   Heading,
   Img,
   Text,
+  TextProps,
   useToken,
 } from "@chakra-ui/react"
 
-import Breadcrumbs from "../../components/Breadcrumbs"
-import ButtonLink from "../../components/ButtonLink"
-import CardList from "../../components/CardList"
-import Checkbox from "../../components/Checkbox"
-import CopyToClipboard from "../../components/CopyToClipboard"
-import Emoji from "../../components/Emoji"
-import InfoBanner from "../../components/InfoBanner"
-import Link from "../../components/Link"
-import PageMetadata from "../../components/PageMetadata"
-import Translation from "../../components/Translation"
-import Tooltip from "../../components/Tooltip"
-import FeedbackCard from "../../components/FeedbackCard"
+import type {
+  BasePageProps,
+  ChildOnlyProp,
+  Lang,
+  TranslationKey,
+} from "@/lib/types"
 
-import { DEPOSIT_CONTRACT_ADDRESS } from "../../data/addresses"
-import { TranslationKey } from "../../utils/translations"
-import { getImage } from "../../utils/image"
+import Breadcrumbs from "@/components/Breadcrumbs"
+import ButtonLink, {
+  type ButtonLinkProps,
+} from "@/components/Buttons/ButtonLink"
+import CardList from "@/components/CardList"
+import CopyToClipboard from "@/components/CopyToClipboard"
+import Emoji from "@/components/Emoji"
+import FeedbackCard from "@/components/FeedbackCard"
+import InfoBanner from "@/components/InfoBanner"
+import InlineLink from "@/components/Link"
+import MainArticle from "@/components/MainArticle"
+import OldHeading from "@/components/OldHeading"
+import PageMetadata from "@/components/PageMetadata"
+import Tooltip from "@/components/Tooltip"
+import Translation from "@/components/Translation"
 
-import type { ChildOnlyProp, Context } from "../../types"
+import { existsNamespace } from "@/lib/utils/existsNamespace"
+import { getLastDeployDate } from "@/lib/utils/getLastDeployDate"
+import { getLocaleTimestamp } from "@/lib/utils/time"
+import { getRequiredNamespacesForPage } from "@/lib/utils/translations"
+
+import { DEPOSIT_CONTRACT_ADDRESS } from "@/data/addresses"
+
+import consensys from "@/public/images/projects/consensys.png"
+import etherscan from "@/public/images/projects/etherscan-logo-circle.png"
+import ef from "@/public/images/staking/ef-blog-logo.png"
 
 const FlexBox = (props: ChildOnlyProp) => (
   <Flex
@@ -57,7 +77,7 @@ const RightColumn = (props: ChildOnlyProp) => (
 )
 
 const Title = (props: ChildOnlyProp) => (
-  <Heading
+  <OldHeading
     as="h1"
     fontWeight="700"
     fontSize="2rem"
@@ -80,9 +100,12 @@ const ButtonRow = (props: ChildOnlyProp) => (
   />
 )
 
-const StyledButton = (props: { id: TranslationKey; to: string }) => (
-  <ButtonLink to={props.to} mt="0" mb={12}>
-    <Translation id={props.id} />
+const StyledButton = ({
+  href,
+  children,
+}: Pick<ButtonLinkProps, "href" | "children">) => (
+  <ButtonLink href={href} mt="0" mb="12">
+    {children}
   </ButtonLink>
 )
 
@@ -91,7 +114,7 @@ const CardTag = (props: ChildOnlyProp) => (
     alignItems="center"
     justifyContent="center"
     p={2}
-    bg="primary"
+    bg="primary.base"
     borderBottom="1px solid border"
     color="buttonColor"
     borderRadius="3px 3px 0px 0px"
@@ -105,7 +128,7 @@ const AddressCard = (props: ChildOnlyProp) => {
   const tableBoxShadow = useToken("colors", "tableBoxShadow")
   return (
     <Box
-      bg="background"
+      bg="background.base"
       border="1px solid"
       borderColor="border"
       borderRadius="4px"
@@ -119,8 +142,9 @@ const AddressCard = (props: ChildOnlyProp) => {
   )
 }
 
-const Address = (props: ChildOnlyProp) => (
+const Address = forwardRef<ChildOnlyProp, "div">((props, ref) => (
   <Box
+    ref={ref}
     fontFamily="monospace"
     borderRadius="sm"
     fontSize="2rem"
@@ -130,13 +154,13 @@ const Address = (props: ChildOnlyProp) => (
     mb={4}
     {...props}
   />
-)
+))
 
 const CopyButton = (props: ButtonProps) => (
   <Button
     variant="outline"
     mb={4}
-    mr={{ base: 0, md: 6 }}
+    me={{ base: 0, md: 6 }}
     mt={{ base: 4, md: 0 }}
     {...props}
   />
@@ -156,7 +180,6 @@ const Row = (props: ChildOnlyProp) => (
 const CardTitle = (props: ChildOnlyProp) => (
   <Heading
     as="h2"
-    mt={0}
     mb={4}
     fontWeight="600"
     fontSize="2rem"
@@ -179,27 +202,47 @@ const Blockie = (props: { src: string }) => (
   <Img src={props.src} borderRadius="base" height={16} width={16} />
 )
 
-const StyledFakeLink = (props: { onClick: any; children: ReactNode }) => (
+const StyledFakeLink = forwardRef<TextProps, "button">((props, ref) => (
   <Text
+    ref={ref}
     as="button"
-    onClick={props.onClick}
-    mr={2}
-    color="primary"
+    me={2}
+    color="primary.base"
     cursor="pointer"
-  >
-    {props.children}
-  </Text>
-)
+    {...props}
+  />
+))
 
 const CHUNKED_ADDRESS = DEPOSIT_CONTRACT_ADDRESS.match(/.{1,3}/g)?.join(" ")
 
 const blockieSrc = makeBlockie(DEPOSIT_CONTRACT_ADDRESS)
 
-const DepositContractPage = ({
-  data,
-  location,
-}: PageProps<Queries.DepositContractPageQuery, Context>) => {
-  const { t } = useTranslation()
+export const getStaticProps = (async ({ locale }) => {
+  const requiredNamespaces = getRequiredNamespacesForPage(
+    "/staking/deposit-contract"
+  )
+
+  const contentNotTranslated = !existsNamespace(locale!, requiredNamespaces[2])
+
+  const lastDeployDate = getLastDeployDate()
+  const lastDeployLocaleTimestamp = getLocaleTimestamp(
+    locale as Lang,
+    lastDeployDate
+  )
+
+  return {
+    props: {
+      ...(await serverSideTranslations(locale!, requiredNamespaces)),
+      contentNotTranslated,
+      lastDeployLocaleTimestamp,
+    },
+  }
+}) satisfies GetStaticProps<BasePageProps>
+
+const DepositContractPage = () => {
+  const { asPath } = useRouter()
+
+  const { t } = useTranslation("page-staking-deposit-contract")
 
   const [state, setState] = useState<{
     browserHasTextToSpeechSupport: boolean
@@ -221,11 +264,9 @@ const DepositContractPage = ({
 
   useEffect(() => {
     const browserHasTextToSpeechSupport = !!window.speechSynthesis
-    if (!browserHasTextToSpeechSupport) {
-      return
-    }
+    if (!browserHasTextToSpeechSupport) return
     // Create textToSpeechRequest
-    let speech = new SpeechSynthesisUtterance()
+    const speech = new SpeechSynthesisUtterance()
     speech.lang = "en-US"
     speech.text = DEPOSIT_CONTRACT_ADDRESS.split("").join(",")
     speech.volume = 1
@@ -280,25 +321,19 @@ const DepositContractPage = ({
     {
       title: "ConsenSys",
       link: "https://consensys.net/blog/news/eth2-phase-0-deposit-contract-address/",
-      image: getImage(data.consensys)!,
+      image: consensys,
       alt: "",
     },
     {
       title: "Ethereum Foundation",
       link: "https://blog.ethereum.org/2020/11/04/eth2-quick-update-no-19/",
-      image: getImage(data.ef)!,
+      image: ef,
       alt: "",
     },
     {
       title: "Etherscan",
       link: `https://etherscan.io/address/${DEPOSIT_CONTRACT_ADDRESS}`,
-      image: getImage(data.etherscan)!,
-      alt: "",
-    },
-    {
-      title: "EthHub",
-      link: "https://docs.ethhub.io/ethereum-roadmap/ethereum-2.0/deposit-contract/",
-      image: getImage(data.ethhub)!,
+      image: etherscan,
       alt: "",
     },
   ]
@@ -315,62 +350,48 @@ const DepositContractPage = ({
     ? ":speaker_high_volume:"
     : ":speaker:"
   return (
-    <Box w="100%">
+    <Box as={MainArticle} w="100%">
       <FlexBox>
         <PageMetadata
           title={t("page-staking-deposit-contract-meta-title")}
           description={t("page-staking-deposit-contract-meta-desc")}
         />
         <LeftColumn>
-          <Breadcrumbs slug={location.pathname} startDepth={1} />
-          <Title>
-            <Translation id="page-staking-deposit-contract-title" />
-          </Title>
-          <Subtitle>
-            <Translation id="page-staking-deposit-contract-subtitle" />
-          </Subtitle>
-          <h2>
-            <Translation id="page-staking-deposit-contract-h2" />
-          </h2>
-          <p>
-            <Translation id="page-staking-deposit-contract-staking" />{" "}
-            <Link to="/staking/">
-              <Translation id="page-staking-deposit-contract-staking-more-link" />
-            </Link>
-          </p>
-          <StyledButton
-            to="https://launchpad.ethereum.org"
-            id="page-staking-deposit-contract-launchpad"
-          />
-          <h2>
-            <Translation id="page-staking-deposit-contract-staking-check" />
-          </h2>
-          <p>
-            <Translation id="page-staking-deposit-contract-staking-check-desc" />
-          </p>
-          <CardList content={addressSources} />
+          <Breadcrumbs slug={asPath} startDepth={1} />
+          <Title>{t("page-staking-deposit-contract-title")}</Title>
+          <Subtitle>{t("page-staking-deposit-contract-subtitle")}</Subtitle>
+          <OldHeading>{t("page-staking-deposit-contract-h2")}</OldHeading>
+          <Text>
+            {t("page-staking-deposit-contract-staking")}{" "}
+            <InlineLink href="/staking/">
+              {t("page-staking-deposit-contract-staking-more-link")}
+            </InlineLink>
+          </Text>
+          <StyledButton href="https://launchpad.ethereum.org">
+            {t("page-staking-deposit-contract-launchpad")}
+          </StyledButton>
+          <OldHeading>
+            {t("page-staking-deposit-contract-staking-check")}
+          </OldHeading>
+          <Text>{t("page-staking-deposit-contract-staking-check-desc")}</Text>
+          <CardList items={addressSources} />
         </LeftColumn>
         <RightColumn>
           <AddressCard>
             <CardTag>
-              <Translation id="page-staking-deposit-contract-address-check-btn" />
+              {t("page-staking-deposit-contract-address-check-btn")}
             </CardTag>
             <Box m={8}>
               {!state.showAddress && (
                 <>
                   <Row>
                     <CardTitle>
-                      <Translation id="page-staking-deposit-contract-confirm-address" />
+                      {t("page-staking-deposit-contract-confirm-address")}
                     </CardTitle>
                   </Row>
                   <Checkbox
+                    mb={2}
                     isChecked={state.userHasUsedLaunchpad}
-                    size="md"
-                    mb="0.5rem"
-                    display="flex"
-                    alignItems="top"
-                    variant="alignTop"
-                    minHeight="3.5rem"
                     onChange={() =>
                       setState({
                         ...state,
@@ -378,16 +399,11 @@ const DepositContractPage = ({
                       })
                     }
                   >
-                    <Translation id="page-staking-deposit-contract-checkbox1" />
+                    {t("page-staking-deposit-contract-checkbox1")}
                   </Checkbox>
                   <Checkbox
+                    mb={2}
                     isChecked={state.userUnderstandsStaking}
-                    size="md"
-                    mb="0.5rem"
-                    display="flex"
-                    alignItems="top"
-                    variant="alignTop"
-                    minHeight="3.5rem"
                     onChange={() =>
                       setState({
                         ...state,
@@ -395,16 +411,11 @@ const DepositContractPage = ({
                       })
                     }
                   >
-                    <Translation id="page-staking-deposit-contract-checkbox2" />
+                    {t("page-staking-deposit-contract-checkbox2")}
                   </Checkbox>
                   <Checkbox
+                    mb={2}
                     isChecked={state.userWillCheckOtherSources}
-                    size="md"
-                    mb="0.5rem"
-                    display="flex"
-                    alignItems="top"
-                    variant="alignTop"
-                    minHeight="3.5rem"
                     onChange={() =>
                       setState({
                         ...state,
@@ -413,16 +424,16 @@ const DepositContractPage = ({
                       })
                     }
                   >
-                    <Translation id="page-staking-deposit-contract-checkbox3" />
+                    {t("page-staking-deposit-contract-checkbox3")}
                   </Checkbox>
                   <CopyButton
                     isDisabled={!isButtonEnabled}
-                    leftIcon={<Emoji text=":eyes:" boxSize={4} />}
+                    leftIcon={<Emoji text=":eyes:" className="text-md" />}
                     onClick={() =>
                       setState({ ...state, showAddress: !state.showAddress })
                     }
                   >
-                    <Translation id="page-staking-deposit-contract-reveal-address-btn" />
+                    {t("page-staking-deposit-contract-reveal-address-btn")}
                   </CopyButton>
                 </>
               )}
@@ -431,10 +442,10 @@ const DepositContractPage = ({
                   <Row>
                     <Box>
                       <CardTitle>
-                        <Translation id="page-staking-deposit-contract-address" />
+                        {t("page-staking-deposit-contract-address")}
                       </CardTitle>
                       <Caption>
-                        <Translation id="page-staking-deposit-contract-address-caption" />
+                        {t("page-staking-deposit-contract-address-caption")}
                       </Caption>
                     </Box>
                     <Blockie src={blockieSrc} />
@@ -444,7 +455,7 @@ const DepositContractPage = ({
                       <StyledFakeLink onClick={handleTextToSpeech}>
                         <Translation id={textToSpeechText as TranslationKey} />
                       </StyledFakeLink>{" "}
-                      <Emoji text={textToSpeechEmoji} boxSize={4} />
+                      <Emoji text={textToSpeechEmoji} className="text-md" />
                     </Flex>
                   )}
                   <Tooltip content={t("page-staking-deposit-contract-warning")}>
@@ -456,34 +467,35 @@ const DepositContractPage = ({
                         <CopyButton
                           leftIcon={
                             isCopied ? (
-                              <Emoji text=":white_check_mark:" boxSize={4} />
+                              <Emoji
+                                text=":white_check_mark:"
+                                className="text-md"
+                              />
                             ) : (
-                              <Emoji text=":clipboard:" boxSize={4} />
+                              <Emoji text=":clipboard:" className="text-md" />
                             )
                           }
                         >
-                          {!isCopied ? (
-                            <Translation id="page-staking-deposit-contract-copy" />
-                          ) : (
-                            <Translation id="page-staking-deposit-contract-copied" />
-                          )}
+                          {!isCopied
+                            ? t("page-staking-deposit-contract-copy")
+                            : t("page-staking-deposit-contract-copied")}
                         </CopyButton>
                       )}
                     </CopyToClipboard>
-                    <Link
-                      to={`https://etherscan.io/address/${DEPOSIT_CONTRACT_ADDRESS}`}
+                    <InlineLink
+                      href={`https://etherscan.io/address/${DEPOSIT_CONTRACT_ADDRESS}`}
                     >
-                      <Translation id="page-staking-deposit-contract-etherscan" />
-                    </Link>
+                      {t("page-staking-deposit-contract-etherscan")}
+                    </InlineLink>
                   </ButtonRow>
                 </>
               )}
-              <InfoBanner isWarning={true} emoji=":warning:">
+              <InfoBanner isWarning emoji=":warning:">
                 <div>
-                  <Translation id="page-staking-deposit-contract-warning-2" />{" "}
-                  <Link to="https://launchpad.ethereum.org">
-                    <Translation id="page-staking-deposit-contract-launchpad-2" />
-                  </Link>
+                  {t("page-staking-deposit-contract-warning-2")}{" "}
+                  <InlineLink href="https://launchpad.ethereum.org">
+                    {t("page-staking-deposit-contract-launchpad-2")}
+                  </InlineLink>
                 </div>
               </InfoBanner>
             </Box>
@@ -496,49 +508,3 @@ const DepositContractPage = ({
 }
 
 export default DepositContractPage
-
-export const sourceImage = graphql`
-  fragment sourceImage on File {
-    childImageSharp {
-      gatsbyImageData(
-        height: 20
-        layout: FIXED
-        placeholder: BLURRED
-        quality: 100
-      )
-    }
-  }
-`
-
-export const query = graphql`
-  query DepositContractPage($languagesToFetch: [String!]!) {
-    locales: allLocale(
-      filter: {
-        language: { in: $languagesToFetch }
-        ns: { in: ["page-staking-deposit-contract", "common"] }
-      }
-    ) {
-      edges {
-        node {
-          ns
-          data
-          language
-        }
-      }
-    }
-    consensys: file(relativePath: { eq: "projects/consensys.png" }) {
-      ...sourceImage
-    }
-    ef: file(relativePath: { eq: "staking/ef-blog-logo.png" }) {
-      ...sourceImage
-    }
-    ethhub: file(relativePath: { eq: "projects/ethhub.png" }) {
-      ...sourceImage
-    }
-    etherscan: file(
-      relativePath: { eq: "projects/etherscan-logo-circle.png" }
-    ) {
-      ...sourceImage
-    }
-  }
-`

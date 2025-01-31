@@ -1,14 +1,16 @@
-import React from "react"
-import { Text, TextProps } from "@chakra-ui/react"
+import { HTMLAttributes } from "react"
+
+import { cn } from "@/lib/utils/cn"
 
 import Translation from "./Translation"
 
-export interface IProps extends TextProps {}
-
-const StatErrorMessage: React.FC<IProps> = (props) => (
-  <Text as="span" fontSize="2rem" {...props}>
+const StatErrorMessage = ({
+  className,
+  ...props
+}: HTMLAttributes<HTMLSpanElement>) => (
+  <span className={cn("text-3xl leading-xs", className)} {...props}>
     <Translation id="loading-error-refresh" />
-  </Text>
+  </span>
 )
 
 export default StatErrorMessage

@@ -1,23 +1,22 @@
 import React, { useState } from "react"
-import {
-  Box,
-  Flex,
-  GridItem,
-  Heading,
-  SimpleGrid,
-  Text,
-} from "@chakra-ui/react"
+import { Box, Flex, GridItem, SimpleGrid } from "@chakra-ui/react"
+
+import { cn } from "@/lib/utils/cn"
+import { MatomoEventOptions, trackCustomEvent } from "@/lib/utils/matomo"
 
 import Emoji from "./Emoji"
+import OldHeading from "./OldHeading"
+import Text from "./OldText"
 
-export interface IBoxItem {
+export interface BoxItem {
   emoji: string
   title: string
   description: string
+  matomo: MatomoEventOptions
 }
 
-export interface IProps {
-  items: Array<IBoxItem>
+export type BoxGridProps = {
+  items: Array<BoxItem>
 }
 
 // Represent string as 32-bit integer
@@ -37,12 +36,12 @@ const colors = [
   "gridRed",
   "gridBlue",
   "gridGreen",
-  "gridOrange",
+  "warning",
   "gridPink",
   "gridPurple",
 ]
 
-const BoxGrid: React.FC<IProps> = ({ items }) => {
+const BoxGrid = ({ items }: BoxGridProps) => {
   const [indexOpen, setOpenIndex] = useState(0)
 
   return (
@@ -64,7 +63,7 @@ const BoxGrid: React.FC<IProps> = ({ items }) => {
             colStart={{ ...(isOpen && { lg: columnNumber }) }}
             color={isOpen ? "black300" : "text"}
             cursor="pointer"
-            bg={isOpen ? color : "background"}
+            bg={isOpen ? color : "background.base"}
             direction={{
               base: isOpen ? "column" : "column-reverse",
               sm: isOpen ? "column" : "row-reverse",
@@ -81,25 +80,27 @@ const BoxGrid: React.FC<IProps> = ({ items }) => {
               transform: "skewX(-5deg)",
               boxShadow: "tableBoxShadow",
             }}
-            onClick={() => setOpenIndex(idx)}
+            onClick={() => {
+              setOpenIndex(idx)
+              trackCustomEvent({
+                eventCategory: item.matomo.eventCategory,
+                eventAction: item.matomo.eventAction,
+                eventName: item.matomo.eventName,
+              })
+            }}
             key={idx}
           >
             <Emoji
-              m={2}
+              className={cn(
+                "m-2 text-8xl",
+                isOpen
+                  ? "mb-8"
+                  : "self-center hover:rotate-12 hover:duration-500"
+              )}
               text={item.emoji}
-              fontSize="8xl"
-              {...(isOpen
-                ? { mb: 8 }
-                : {
-                    alignSelf: "center",
-                    _hover: {
-                      transition: "transform 50s",
-                      transform: "rotate(10turn)",
-                    },
-                  })}
             />
             <Box>
-              <Heading
+              <OldHeading
                 as="h3"
                 fontSize="2.5rem"
                 fontWeight="normal"
@@ -107,7 +108,7 @@ const BoxGrid: React.FC<IProps> = ({ items }) => {
                 lineHeight={1.4}
               >
                 {item.title}
-              </Heading>
+              </OldHeading>
               {isOpen && (
                 <Text fontSize="xl" lineHeight={1.4} color="black300">
                   {item.description}

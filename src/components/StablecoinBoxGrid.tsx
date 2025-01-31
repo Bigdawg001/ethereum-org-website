@@ -1,11 +1,17 @@
-import React, { useState } from "react"
-import { Box, Flex, Heading, useColorModeValue } from "@chakra-ui/react"
-import { useI18next } from "gatsby-plugin-react-i18next"
-import Link, { navigate } from "./Link"
+import { useState } from "react"
+import { useRouter } from "next/router"
+import { useTranslation } from "next-i18next"
+
+import { ChildOnlyProp } from "@/lib/types"
+
+import { Flex } from "@/components/ui/flex"
+import InlineLink from "@/components/ui/Link"
+
+import { cn } from "@/lib/utils/cn"
+
+import { isMobile } from "../lib/utils/isMobile"
+
 import Emoji from "./Emoji"
-import Translation from "./Translation"
-import { isMobile } from "../utils/isMobile"
-import { Lang } from "../utils/languages"
 
 // Represent string as 32-bit integer
 const hashCode = (string: string): number => {
@@ -20,12 +26,12 @@ const hashCode = (string: string): number => {
 
 // Theme variables from Theme.js
 const colors = [
-  "gridYellow",
-  "gridBlue",
-  "gridGreen",
-  "gridOrange",
-  "gridPink",
-  "gridPurple",
+  "bg-yellow-300",
+  "bg-blue-300",
+  "bg-green-300",
+  "bg-orange-100",
+  "bg-pink-300",
+  "bg-purple-300",
 ]
 
 interface ILink {
@@ -33,10 +39,8 @@ interface ILink {
   text: string
 }
 
-interface IPropsGridItem {
+type GridItemProps = {
   description: string
-  columnNumber: number
-  rowNumber: number
   emoji: string
   index: number
   title: string
@@ -48,93 +52,49 @@ interface IPropsGridItem {
   links: Array<ILink>
 }
 
-const OpenTitle: React.FC<{ title: string }> = ({ title }) => {
-  return (
-    <Heading
-      as="h3"
-      fontSize={{ base: "2rem", sm: "2.5rem" }}
-      fontWeight={700}
-      marginTop={0}
-    >
-      {title}
-    </Heading>
-  )
+const OpenTitle = ({ title }: { title: string }) => {
+  return <h3 className="mb-8 mt-0 text-3xl font-bold sm:text-4xl">{title}</h3>
 }
 
-const Title: React.FC<{ title: string }> = ({ title }) => {
-  return (
-    <Heading
-      as="h3"
-      fontSize={{ base: "2rem", sm: "2.5rem" }}
-      fontWeight={400}
-      marginTop={0}
-    >
-      {title}
-    </Heading>
-  )
+const Title = ({ title }: { title: string }) => {
+  return <h3 className="mb-8 mt-0 text-3xl font-normal sm:text-4xl">{title}</h3>
 }
 
-const Subtitle: React.FC<{ children: any }> = ({ children }) => {
+const Subtitle = ({ children }: ChildOnlyProp) => {
   return (
-    <Heading
-      as="h4"
-      fontSize={{ base: "2xl", sm: "2rem" }}
-      fontWeight={600}
-      marginTop={0}
-      padding={2}
-      paddingBottom={4}
-      borderBottom="1px solid"
-      borderColor="black300"
-    >
+    <h4 className="mb-8 mt-0 border-b border-body-medium p-2 pb-4 text-2xl font-semibold sm:text-3xl">
       {children}
-    </Heading>
+    </h4>
   )
 }
 
-const Body: React.FC<{ children: any }> = ({ children }) => {
-  return (
-    <Box fontSize="xl" lineHeight="140%" color="black300">
-      {children}
-    </Box>
-  )
+const Body = ({ children }: ChildOnlyProp) => {
+  return <div className="text-xl text-gray-600">{children}</div>
 }
 
-const StyledEmoji: React.FC<{ emoji: string }> = ({ emoji }) => {
+const StyledEmoji = ({ emoji }: { emoji: string }) => {
   return (
     <Emoji
-      fontSize="8xl"
+      className="order-2 m-2 self-center text-8xl duration-500 hover:rotate-12"
       text={emoji}
-      margin={2}
-      alignSelf="center"
-      order="2"
-      _hover={{
-        transition: "transform 50s",
-        transform: "rotate(10turn)",
-      }}
     />
   )
 }
 
-const Row: React.FC<{ children: any }> = ({ children }) => {
+const Row = ({ children }: ChildOnlyProp) => {
   return (
-    <Flex
-      justify="space-between"
-      marginTop={8}
-      direction={{ base: "column", md: "row" }}
-    >
+    <Flex className="mt-8 flex-col justify-between md:flex-row">
       {children}
     </Flex>
   )
 }
 
-const Column: React.FC<{ children: any }> = ({ children }) => {
-  return <Box width="100%">{children}</Box>
+const Column = ({ children }: ChildOnlyProp) => {
+  return <div className="w-full">{children}</div>
 }
 
-const GridItem: React.FC<IPropsGridItem> = ({
+const GridItem = ({
   description,
-  columnNumber,
-  rowNumber,
   emoji,
   index,
   title,
@@ -144,44 +104,26 @@ const GridItem: React.FC<IPropsGridItem> = ({
   pros,
   cons,
   links,
-}) => {
+}: GridItemProps) => {
   const handleClick = (): void => {
     callback(index)
   }
-  const shadow = useColorModeValue("tableBox.light", "tableBox.dark")
+  const { t } = useTranslation("page-stablecoins")
 
   return (
     <Flex
       id={`type-${index}`}
       onClick={() => handleClick()}
-      gridRowStart={isOpen ? rowNumber : `auto`}
-      gridRowEnd={isOpen ? `span 3` : `auto`}
-      gridColumnStart={isOpen ? columnNumber : `auto`}
-      color={isOpen ? "black300" : "text"}
-      cursor={isOpen ? `auto` : `pointer`}
-      background={isOpen ? color : "background"}
-      direction={{
-        base: "column",
-        sm: `${isOpen ? "column" : "row"}`,
-        lg: "column",
-      }}
-      justify={{
-        base: `${isOpen ? "flex-start" : "space-between"}`,
-        lg: "flex-start",
-      }}
-      align={{ base: "center", lg: "flex-start" }}
-      border="1px solid"
-      borderColor="text"
-      padding={6}
-      _hover={{
-        background: isOpen ? color : "ednBackground",
-        transition: isOpen ? "auto" : "transform 0.5s",
-        transform: isOpen ? "auto" : "skewX(-5deg)",
-        boxShadow: shadow,
-      }}
+      className={cn(
+        "flex-col",
+        isOpen
+          ? `${color} col-start-1 row-start-1 row-end-[span_3] cursor-auto justify-start text-gray-600 transition sm:flex-col`
+          : "col-start-auto row-start-auto row-end-auto cursor-pointer justify-between bg-background transition-transform duration-500 hover:skew-x-[-5deg] hover:bg-background-highlight sm:flex-row",
+        "items-center border border-body p-6 hover:shadow-table-box lg:flex-col lg:items-start lg:justify-start"
+      )}
     >
       {isOpen ? (
-        <Emoji mb={8} text={emoji} fontSize="8xl" />
+        <Emoji className="mb-8 text-8xl" text={emoji} />
       ) : (
         <>
           <StyledEmoji emoji={emoji} />
@@ -196,9 +138,7 @@ const GridItem: React.FC<IPropsGridItem> = ({
             <Row>
               {pros && (
                 <Column>
-                  <Subtitle>
-                    <Translation id="pros" />
-                  </Subtitle>
+                  <Subtitle>{t("pros")}</Subtitle>
 
                   <Body>
                     <ul>
@@ -211,9 +151,7 @@ const GridItem: React.FC<IPropsGridItem> = ({
               )}
               {cons && (
                 <Column>
-                  <Subtitle>
-                    <Translation id="cons" />
-                  </Subtitle>
+                  <Subtitle>{t("cons")}</Subtitle>
                   <Body>
                     <ul>
                       {cons.map((con, idx) => (
@@ -225,23 +163,18 @@ const GridItem: React.FC<IPropsGridItem> = ({
               )}
             </Row>
             <div>
-              <Subtitle>
-                <Translation id="example-projects" />
-              </Subtitle>
+              <Subtitle>{t("example-projects")}</Subtitle>
               <Body>
                 <ul>
                   {links.map((link, idx) => (
                     <li key={idx}>
-                      <Link
+                      <InlineLink
                         key={idx}
-                        to={link.url}
-                        color="black300"
-                        _hover={{
-                          color: "black",
-                        }}
+                        href={link.url}
+                        className="text-gray-600 hover:text-gray-900"
                       >
                         {link.text}
-                      </Link>
+                      </InlineLink>
                     </li>
                   ))}
                 </ul>
@@ -263,35 +196,25 @@ export interface IPropsBoxItem {
   links: Array<ILink>
 }
 
-export interface IProps {
+export type StablecoinBoxGridProps = {
   items: Array<IPropsBoxItem>
 }
 
-const StablecoinBoxGrid: React.FC<IProps> = ({ items }) => {
-  const { language } = useI18next()
+const StablecoinBoxGrid = ({ items }: StablecoinBoxGridProps) => {
   const [indexOpen, setOpenIndex] = useState<number>(0)
+  const router = useRouter()
 
   // TODO generalize
   const handleSelect = (idx: number): void => {
     setOpenIndex(idx)
     if (isMobile()) {
-      navigate(`/stablecoins/#type-${idx}`, language as Lang)
+      router.push(`/stablecoins/#type-${idx}`)
     }
   }
 
   return (
-    <Box
-      gridTemplateColumns="3fr 1fr"
-      gridTemplateRows="3fr 3fr"
-      borderRadius="sm"
-      my={16}
-      display={{ base: "flex", lg: "grid" }}
-      flexDirection="column"
-      maxW="100%"
-    >
+    <div className="my-16 flex max-w-full flex-col rounded-sm lg:grid lg:grid-cols-[3fr_1fr] lg:grid-rows-[3fr_3fr]">
       {items.map((item, idx) => {
-        let columnNumber = 1
-        let rowNumber = 1
         const colorIdx = hashCode(item.emoji) % colors.length
         const color = colors[colorIdx]
         return (
@@ -304,15 +227,13 @@ const StablecoinBoxGrid: React.FC<IProps> = ({ items }) => {
             cons={item.cons}
             links={item.links}
             index={idx}
-            columnNumber={columnNumber}
-            rowNumber={rowNumber}
             isOpen={idx === indexOpen}
             callback={handleSelect}
             color={color}
           />
         )
       })}
-    </Box>
+    </div>
   )
 }
 

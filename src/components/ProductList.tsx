@@ -1,91 +1,70 @@
-import React from "react"
-import { GatsbyImage } from "gatsby-plugin-image"
-import { Box, Flex, Heading, Image, useColorModeValue } from "@chakra-ui/react"
+import type { ImageProps } from "next/image"
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
 
-import ButtonLink from "./ButtonLink"
-import Translation from "./Translation"
+import { ButtonLink } from "./ui/buttons/Button"
+import { Flex } from "./ui/flex"
+import { List, ListItem } from "./ui/list"
+import { TwImage } from "./Image"
 
-export interface Content {
+type Content = {
   title: string
   description: string
   link?: string
-  image?: any
+  image?: ImageProps["src"]
   alt: string
   id?: string
 }
 
-export interface IProps {
-  content: Array<Content>
+export type ProductListProps = {
+  content: Content[]
   category: string
+  actionLabel: string
 }
 
-const ProductList: React.FC<IProps> = ({ content, category }) => {
-  const shadow = useColorModeValue("tableBox.light", "tableBox.dark")
+const ProductList = ({ actionLabel, content, category }: ProductListProps) => {
+  const CATEGORY_NAME = "category-name"
 
   return (
-    <Box width="full">
-      <Heading
-        as="h3"
-        fontSize="2xl"
-        borderBottom="2px solid"
-        borderColor="border"
-        paddingBottom={4}
-        marginBottom={0}
+    <div className="w-full">
+      <h3
+        id={CATEGORY_NAME}
+        className="mb-0 mt-10 border-b-2 border-border pb-4 text-2xl"
       >
         {category}
-      </Heading>
-      {content.map(({ title, description, link, image, alt, id }, idx) => (
-        <Flex
-          key={id || idx}
-          color="text"
-          marginBottom="px"
-          marginTop={8}
-          alignItems={{ sm: "flex-start" }}
-        >
-          <Box width="5rem">
-            {image && (
-              <Image
-                as={GatsbyImage}
-                image={image}
-                alt={alt}
-                boxShadow={shadow}
-                borderRadius="sm"
-              />
-            )}
-          </Box>
-          <Flex
-            paddingBottom={4}
-            width="full"
-            alignItems={{ base: "flex-start", sm: "center" }}
-            marginLeft={{ base: 4, sm: 6 }}
-            justifyContent="space-between"
-            borderBottom="1px solid"
-            borderColor="border"
-            flexDir={{ base: "column", sm: "row" }}
-          >
-            <Box flexDir="column">
-              <Box>{title}</Box>
-              <Box fontSize="sm" marginBottom={0} opacity="0.6">
-                {description}
-              </Box>
-            </Box>
-            {link && (
-              <ButtonLink
-                variant="outline"
-                to={link}
-                marginLeft={{ base: 0, sm: 8 }}
-                paddingY={1}
-                paddingX={6}
-                borderRadius="sm"
-                marginTop={{ base: 4, sm: 0 }}
-              >
-                <Translation id="page-dapps-ready-button" />
-              </ButtonLink>
-            )}
-          </Flex>
-        </Flex>
-      ))}
-    </Box>
+      </h3>
+      <List aria-labelledby={CATEGORY_NAME} className="m-0">
+        {content.map(({ title, description, link, image, alt, id }, idx) => (
+          <ListItem key={id || idx} color="text" className="mb-0 mt-8 flex">
+            <div className="w-20">
+              {image && (
+                <TwImage
+                  src={image}
+                  alt={alt}
+                  width={66}
+                  className="rounded-sm shadow-lg dark:shadow-body-light"
+                />
+              )}
+            </div>
+            <Flex className="ms-4 w-full flex-col justify-between border-b pb-4 sm:ms-6 sm:flex-row">
+              <div className="flex-1">
+                <div>{title}</div>
+                <div className="mb-0 text-sm opacity-60">{description}</div>
+              </div>
+              {link && (
+                <ButtonLink
+                  variant="outline"
+                  href={link}
+                  className="ms-0 mt-4 min-h-fit gap-0 self-center rounded-sm px-6 py-1 sm:ms-8 sm:mt-0"
+                >
+                  {actionLabel}
+                  <VisuallyHidden>to {title} website</VisuallyHidden>
+                </ButtonLink>
+              )}
+            </Flex>
+          </ListItem>
+        ))}
+      </List>
+    </div>
   )
 }
 

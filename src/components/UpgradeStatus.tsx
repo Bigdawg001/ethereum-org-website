@@ -1,58 +1,39 @@
-import React from "react"
-import { TranslationKey } from "../utils/translations"
-import Translation from "./Translation"
-import { Heading, Text, useColorModeValue, VStack } from "@chakra-ui/react"
+import { useTranslation } from "next-i18next"
 
-export interface IStyledContainer {
-  isShipped: boolean
-}
+import type { TranslationKey } from "@/lib/types"
 
-export interface IProps {
+import { cn } from "@/lib/utils/cn"
+
+export type UpgradeStatusProps = {
   children?: React.ReactNode
   dateKey: TranslationKey
   isShipped?: boolean
 }
 
-const UpgradeStatus: React.FC<IProps> = ({
+const UpgradeStatus = ({
   dateKey,
   children,
   isShipped = false,
-}) => {
-  const border = useColorModeValue("none", "2px solid")
-  const darkBorderColor = isShipped ? "#3fb181" : "#a4a4ff"
-
-  const borderColor = useColorModeValue(undefined, darkBorderColor)
+}: UpgradeStatusProps) => {
+  const { t } = useTranslation("page-staking")
 
   return (
-    <VStack
-      alignItems="start"
-      bg={
-        isShipped ? "upgradeStatusShippedBackground" : "upgradeStatusBackground"
-      }
-      border={border}
-      borderColor={borderColor}
-      borderRadius="base"
-      boxShadow={`0px 4px 7px rgba(0, 0, 0, 0.05), 0px 10px 17px rgba(0, 0, 0, 0.03),
-       0px 14px 66px rgba(0, 0, 0, 0.07)`}
-      mb={8}
-      mt={{ base: 8, lg: 0 }}
-      p={6}
-      spacing={6}
-      width="100%"
+    <aside
+      className={cn(
+        "my-8 flex w-full flex-col gap-6 rounded p-6 shadow-2xl lg:mt-0",
+        "bg-black/80 bg-gradient-to-b from-accent-c/10",
+        "dark:border-2 dark:bg-gray-700 dark:from-transparent",
+        isShipped
+          ? "bg-success-light dark:border-success"
+          : "bg-accent-a/20 dark:border-primary"
+      )}
     >
-      <Heading
-        fontSize="sm"
-        fontWeight="normal"
-        my={0}
-        textTransform="uppercase"
-      >
-        <Translation id="consensus-when-shipping" />
-      </Heading>
-      <Text fontSize="2.5rem" fontWeight="bold" lineHeight="100%">
-        <Translation id={dateKey} />
-      </Text>
-      <Text fontSize="xl">{children}</Text>
-    </VStack>
+      <h2 className="text-sm font-normal uppercase">
+        {t("common:consensus-when-shipping")}
+      </h2>
+      <p className="mb-6 text-4xl font-bold leading-none">{t(dateKey)}</p>
+      <p className="text-xl">{children}</p>
+    </aside>
   )
 }
 

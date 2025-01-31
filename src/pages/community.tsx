@@ -1,31 +1,68 @@
-import React, { ReactNode } from "react"
+import { GetStaticProps } from "next"
+import { useTranslation } from "next-i18next"
+import { serverSideTranslations } from "next-i18next/serverSideTranslations"
 import {
   Box,
   Flex,
-  Heading,
   HeadingProps,
-  Image,
   SimpleGrid,
+  Text,
   useTheme,
 } from "@chakra-ui/react"
-import { GatsbyImage } from "gatsby-plugin-image"
-import { graphql, PageProps } from "gatsby"
-import { useTranslation } from "gatsby-plugin-react-i18next"
 
-import ActionCard from "../components/ActionCard"
-import Callout from "../components/Callout"
-import Card from "../components/Card"
-import ButtonLink, {
-  IProps as IButtonLinkProps,
-} from "../components/ButtonLink"
-import PageMetadata from "../components/PageMetadata"
-import Translation from "../components/Translation"
-import PageHero from "../components/PageHero"
-import FeedbackCard from "../components/FeedbackCard"
+import { BasePageProps, ChildOnlyProp, Lang } from "@/lib/types"
+import { ICard, IGetInvolvedCard } from "@/lib/interfaces"
 
-import { getImage } from "../utils/image"
+import ActionCard from "@/components/ActionCard"
+import ButtonLink, { ButtonLinkProps } from "@/components/Buttons/ButtonLink"
+import Callout from "@/components/Callout"
+import Card from "@/components/Card"
+import FeedbackCard from "@/components/FeedbackCard"
+import { HubHero } from "@/components/Hero"
+import type { HubHeroProps } from "@/components/Hero/HubHero"
+import { Image } from "@/components/Image"
+import MainArticle from "@/components/MainArticle"
+import OldHeading from "@/components/OldHeading"
+import PageMetadata from "@/components/PageMetadata"
+import { Divider } from "@/components/ui/divider"
 
-import type { ChildOnlyProp, Context } from "../types"
+import { existsNamespace } from "@/lib/utils/existsNamespace"
+import { getLastDeployDate } from "@/lib/utils/getLastDeployDate"
+import { getLocaleTimestamp } from "@/lib/utils/time"
+import { getRequiredNamespacesForPage } from "@/lib/utils/translations"
+
+// Static assets
+import developersEthBlockImg from "@/public/images/developers-eth-blocks.png"
+import dogeComputerImg from "@/public/images/doge-computer.png"
+import ethImg from "@/public/images/eth.png"
+import financeTransparentImg from "@/public/images/finance_transparent.png"
+import futureTransparentImg from "@/public/images/future_transparent.png"
+import hackathonTransparentImg from "@/public/images/hackathon_transparent.png"
+// -- Hero
+import communityHeroImg from "@/public/images/heroes/community-hero.png"
+// -- Cards
+import upgradesCoreImg from "@/public/images/upgrades/core.png"
+import whatIsEthereumImg from "@/public/images/what-is-ethereum.png"
+
+export const getStaticProps = (async ({ locale }) => {
+  const requiredNamespaces = getRequiredNamespacesForPage("/community")
+
+  const contentNotTranslated = !existsNamespace(locale!, requiredNamespaces[2])
+
+  const lastDeployDate = getLastDeployDate()
+  const lastDeployLocaleTimestamp = getLocaleTimestamp(
+    locale as Lang,
+    lastDeployDate
+  )
+
+  return {
+    props: {
+      ...(await serverSideTranslations(locale!, requiredNamespaces)),
+      contentNotTranslated,
+      lastDeployLocaleTimestamp,
+    },
+  }
+}) satisfies GetStaticProps<BasePageProps>
 
 const CardContainer = ({ children }: ChildOnlyProp) => {
   return (
@@ -43,13 +80,15 @@ const Content = ({ children }: ChildOnlyProp) => {
   )
 }
 
-const Divider = () => {
-  return <Box my={16} w="10%" h={1} bgColor="homeDivider" />
-}
-
 const Page = ({ children }: ChildOnlyProp) => {
   return (
-    <Flex direction="column" alignItems="center" w="full" mx="auto">
+    <Flex
+      as={MainArticle}
+      direction="column"
+      alignItems="center"
+      w="full"
+      mx="auto"
+    >
       {children}
     </Flex>
   )
@@ -63,11 +102,11 @@ const ButtonRow = ({ children }: ChildOnlyProp) => {
   )
 }
 
-const StyledButtonLink = ({ children, ...props }: IButtonLinkProps) => {
+const StyledButtonLink = ({ children, ...props }: ButtonLinkProps) => {
   return (
     <ButtonLink
       mt={{ base: 4, md: 0 }}
-      ml={{ base: 0, md: 2 }}
+      ms={{ base: 0, md: 2 }}
       display="flex"
       alignItems="center"
       {...props}
@@ -98,9 +137,9 @@ const ImageContainer = ({ children }: ChildOnlyProp) => {
 
 const Subtitle = ({ children }: ChildOnlyProp) => {
   return (
-    <Box mb={8} fontSize={{ base: "md", sm: "xl" }} lineHeight={1.4}>
+    <Text mb={8} fontSize={{ base: "md", sm: "xl" }} lineHeight={1.4}>
       {children}
-    </Box>
+    </Text>
   )
 }
 
@@ -119,67 +158,44 @@ const FeatureContent = ({ children }: ChildOnlyProp) => {
 
 const H2 = ({ children, ...props }: HeadingProps) => {
   return (
-    <Heading fontSize={{ base: "2xl", md: "2rem" }} mt={0} {...props}>
+    <OldHeading fontSize={{ base: "2xl", md: "2rem" }} mt={0} {...props}>
       {children}
-    </Heading>
+    </OldHeading>
   )
 }
 
-interface ICard {
-  image: any
-  title: string
-  description: string
-  alt: string
-  to: string
-}
-
-interface IGetInvolvedCard {
-  emoji: string
-  title: string
-  description: string
-}
-
-const CommunityPage = ({
-  data,
-}: PageProps<Queries.CommunityPageQuery, Context>) => {
-  const { t } = useTranslation()
+const CommunityPage = () => {
+  const { t } = useTranslation("page-community")
   const theme = useTheme()
-  const heroContent = {
-    title: t("page-community-hero-title"),
-    header: t("page-community-hero-header"),
-    subtitle: t("page-community-hero-subtitle"),
-    image: getImage(data.enterprise)!,
-    alt: t("page-community-hero-alt"),
-  }
 
   const cards: Array<ICard> = [
     {
-      image: getImage(data.docking),
+      image: upgradesCoreImg,
       title: t("page-community-card-1-title"),
       description: t("page-community-card-1-description"),
       alt: t("page-index-get-started-wallet-image-alt"),
-      to: "/community/online/",
+      href: "/community/online/",
     },
     {
-      image: getImage(data.eth),
+      image: ethImg,
       title: t("page-community-card-2-title"),
       description: t("page-community-card-2-description"),
       alt: t("page-index-get-started-eth-image-alt"),
-      to: "/community/events/",
+      href: "/community/events/",
     },
     {
-      image: getImage(data.doge),
+      image: dogeComputerImg,
       title: t("page-community-card-3-title"),
       description: t("page-community-card-3-description"),
       alt: t("page-index-get-started-dapps-image-alt"),
-      to: "/community/get-involved/",
+      href: "/community/get-involved/",
     },
     {
-      image: getImage(data.future),
+      image: futureTransparentImg,
       title: t("page-community-card-4-title"),
       description: t("page-community-card-4-description"),
       alt: t("page-index-get-started-dapps-image-alt"),
-      to: "/community/grants/",
+      href: "/community/grants/",
     },
   ]
 
@@ -201,20 +217,27 @@ const CommunityPage = ({
     },
   ]
 
+  const heroContent: HubHeroProps = {
+    title: t("page-community-hero-title"),
+    header: t("page-community-hero-header"),
+    description: t("page-community-hero-subtitle"),
+    heroImg: communityHeroImg,
+  }
+
   return (
     <Page>
       <PageMetadata
         title={t("page-community-meta-title")}
         description={t("page-community-meta-description")}
       />
-      <PageHero isReverse content={heroContent} />
+      <HubHero {...heroContent} />
       <Divider />
       <Flex
         bg="homeBoxTurquoise"
         alignItems="center"
         direction="row-reverse"
         py={{ base: 8, lg: 0 }}
-        pl={{ base: 0, lg: 8 }}
+        ps={{ base: 0, lg: 8 }}
         w="full"
         h={{ base: "full", lg: "720px" }}
         mt="-1px"
@@ -223,18 +246,12 @@ const CommunityPage = ({
       >
         <Content>
           <Flex direction="column" alignItems="center" mb={8}>
-            <H2>
-              <Translation id="page-community-why-get-involved-title" />
-            </H2>
+            <H2>{t("page-community-why-get-involved-title")}</H2>
           </Flex>
           <CardContainer>
             {whyGetInvolvedCards.map((card, idx) => (
               <Card
-                m={4}
-                p={6}
-                flex="1 0 30%"
-                minW="280px"
-                maxW={{ base: "full", md: "46%", lg: "31%" }}
+                className="m-4 min-w-[280px] max-w-full flex-[1_0_30%] p-6 md:max-w-[46%] lg:max-w-[31%]"
                 key={idx}
                 emoji={card.emoji}
                 title={card.title}
@@ -259,39 +276,33 @@ const CommunityPage = ({
           >
             <Box p={{ base: 0, sm: 8, lg: 24 }} boxSize="full">
               <H2 id="get-involved">
-                <Translation id="page-community-get-involved-title" />
+                {t("page-community-get-involved-title")}
               </H2>
               <Subtitle>
-                <Translation id="page-community-get-involved-description" />
+                {t("page-community-get-involved-description")}
               </Subtitle>
             </Box>
             <ImageContainer>
               <Image
-                as={GatsbyImage}
-                w="full"
-                bgSize="cover"
-                bg="no-repeat 50px"
-                image={getImage(data.developerBlocks)!}
+                src={developersEthBlockImg}
                 alt={t("page-community-get-involved-image-alt")}
+                style={{
+                  objectFit: "cover",
+                }}
+                my={-4}
               />
             </ImageContainer>
           </Flex>
           <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={{ base: 8, lg: 0 }}>
             {cards.map((card, idx) => (
-              <Box
-                as={ActionCard}
-                minW={{ base: "min(100%, 240px)", lg: "440px" }}
-                m={{ base: 0, lg: 4 }}
-                borderRadius="sm"
-                border="1px solid"
-                borderColor="text"
-                bg="background"
-                boxShadow={theme.colors.cardBoxShadow}
+              <ActionCard
+                className="m-0 flex-col rounded-sm border lg:m-4"
                 key={idx}
                 title={card.title}
                 description={card.description}
-                to={card.to}
+                href={card.href}
                 image={card.image}
+                imageWidth={320}
                 alt={card.alt}
               />
             ))}
@@ -302,7 +313,7 @@ const CommunityPage = ({
         bg="homeBoxTurquoise"
         alignItems="center"
         direction={{ base: "column-reverse", lg: "row-reverse" }}
-        pl={{ base: 0, lg: 8 }}
+        ps={{ base: 0, lg: 8 }}
         py={{ base: 8, lg: 0 }}
         w="full"
         h={{ base: "full", lg: "720px" }}
@@ -313,27 +324,28 @@ const CommunityPage = ({
       >
         <RowReverse>
           <FeatureContent>
-            <H2>
-              <Translation id="page-community-open-source" />
-            </H2>
-            <Subtitle>
-              <Translation id="page-community-open-source-description" />
-            </Subtitle>
+            <H2>{t("page-community-open-source")}</H2>
+            <Subtitle>{t("page-community-open-source-description")}</Subtitle>
             <ButtonRow>
-              <ButtonLink to="/community/get-involved/#ethereum-jobs/">
-                <Translation id="page-community-find-a-job" />
+              <ButtonLink href="/community/get-involved/#ethereum-jobs/">
+                {t("page-community-find-a-job")}
               </ButtonLink>
-              <StyledButtonLink variant="outline" to="/community/grants/">
-                <Translation id="page-community-explore-grants" />
+              <StyledButtonLink
+                variant="outline"
+                href="/community/grants/"
+                isSecondary
+              >
+                {t("page-community-explore-grants")}
               </StyledButtonLink>
             </ButtonRow>
           </FeatureContent>
           <ImageContainer>
             <Image
-              as={GatsbyImage}
-              w="full"
-              image={getImage(data.ethereum)!}
+              src={whatIsEthereumImg}
               alt={t("page-community-open-source-image-alt")}
+              style={{
+                objectFit: "cover",
+              }}
             />
           </ImageContainer>
         </RowReverse>
@@ -342,7 +354,7 @@ const CommunityPage = ({
         bg="homeBoxPink"
         alignItems="center"
         direction={{ base: "column-reverse", lg: "row-reverse" }}
-        pl={{ base: 0, lg: 8 }}
+        ps={{ base: 0, lg: 8 }}
         py={{ base: 8, lg: 0 }}
         h={{ base: "full", lg: "720px" }}
         w="full"
@@ -357,31 +369,29 @@ const CommunityPage = ({
         >
           <FeatureContent>
             <Flex direction="column" justifyContent="center">
-              <H2>
-                <Translation id="page-community-contribute" />
-              </H2>
-              <Subtitle>
-                <Translation id="page-community-contribute-description" />
-              </Subtitle>
+              <H2>{t("page-community-contribute")}</H2>
+              <Subtitle>{t("page-community-contribute-description")}</Subtitle>
               <ButtonRow>
-                <ButtonLink to="/contributing/">
-                  <Translation id="page-community-contribute-button" />
+                <ButtonLink href="/contributing/">
+                  {t("page-community-contribute-button")}
                 </ButtonLink>
                 <StyledButtonLink
                   variant="outline"
-                  to="https://github.com/ethereum/ethereum-org-website/"
+                  href="https://github.com/ethereum/ethereum-org-website/"
+                  isSecondary
                 >
-                  <Translation id="page-community-contribute-secondary-button" />
+                  {t("page-community-contribute-secondary-button")}
                 </StyledButtonLink>
               </ButtonRow>
             </Flex>
           </FeatureContent>
           <ImageContainer>
             <Image
-              as={GatsbyImage}
-              w="full"
-              image={getImage(data.finance)!}
+              src={financeTransparentImg}
               alt={t("page-index-internet-image-alt")}
+              style={{
+                objectFit: "cover",
+              }}
             />
           </ImageContainer>
         </Flex>
@@ -399,24 +409,21 @@ const CommunityPage = ({
       >
         <RowReverse>
           <FeatureContent>
-            <H2>
-              <Translation id="page-community-support" />
-            </H2>
-            <Subtitle>
-              <Translation id="page-community-support-description" />
-            </Subtitle>
+            <H2>{t("page-community-support")}</H2>
+            <Subtitle>{t("page-community-support-description")}</Subtitle>
             <Box>
-              <ButtonLink to="/community/support/">
-                <Translation id="page-community-support-button" />
+              <ButtonLink href="/community/support/">
+                {t("page-community-support-button")}
               </ButtonLink>
             </Box>
           </FeatureContent>
           <ImageContainer>
             <Image
-              as={GatsbyImage}
-              w="full"
-              image={getImage(data.hackathon)!}
+              src={hackathonTransparentImg}
               alt={t("page-community-support-alt")}
+              style={{
+                objectFit: "cover",
+              }}
             />
           </ImageContainer>
         </RowReverse>
@@ -430,9 +437,9 @@ const CommunityPage = ({
         px={8}
       >
         <Box flex="0 0 50%" maxW={{ base: "full", md: "75%" }} mb={6}>
-          <Heading fontSize={{ base: "2xl", md: "2rem" }}>
-            <Translation id="page-community-try-ethereum" />
-          </Heading>
+          <OldHeading fontSize={{ base: "2xl", md: "2rem" }}>
+            {t("page-community-try-ethereum")}
+          </OldHeading>
         </Box>
       </Flex>
       <Content>
@@ -441,14 +448,14 @@ const CommunityPage = ({
             as={Callout}
             flex="1 1 416px"
             minH="full"
-            image={getImage(data.eth)}
-            titleKey="page-community-get-eth-title"
+            image={ethImg}
+            titleKey="page-community:page-community-get-eth-title"
             alt={t("page-community-get-eth-alt")}
-            descriptionKey="page-community-get-eth-description"
+            descriptionKey="page-community:page-community-get-eth-description"
           >
             <Box>
-              <ButtonLink to="/get-eth/">
-                <Translation id="page-community-get-eth" />
+              <ButtonLink href="/get-eth/">
+                {t("page-community-get-eth")}
               </ButtonLink>
             </Box>
           </Box>
@@ -456,14 +463,14 @@ const CommunityPage = ({
             as={Callout}
             flex="1 1 416px"
             minH="full"
-            image={getImage(data.doge)}
-            titleKey="page-community-explore-dapps-title"
+            image={dogeComputerImg}
+            titleKey="page-community:page-community-explore-dapps-title"
             alt={t("page-community-explore-dapps-alt")}
-            descriptionKey="page-community-explore-dapps-description"
+            descriptionKey="page-community:page-community-explore-dapps-description"
           >
             <Box>
-              <ButtonLink to="/dapps/">
-                <Translation id="page-community-explore-dapps" />
+              <ButtonLink href="/dapps/">
+                {t("page-community-explore-dapps")}
               </ButtonLink>
             </Box>
           </Box>
@@ -475,122 +482,3 @@ const CommunityPage = ({
 }
 
 export default CommunityPage
-
-export const query = graphql`
-  query CommunityPage($languagesToFetch: [String!]!) {
-    locales: allLocale(
-      filter: {
-        language: { in: $languagesToFetch }
-        ns: { in: ["page-community", "common"] }
-      }
-    ) {
-      edges {
-        node {
-          ns
-          data
-          language
-        }
-      }
-    }
-    enterprise: file(relativePath: { eq: "enterprise-eth.png" }) {
-      childImageSharp {
-        gatsbyImageData(
-          width: 800
-          layout: CONSTRAINED
-          placeholder: BLURRED
-          quality: 100
-        )
-      }
-    }
-    developerBlocks: file(relativePath: { eq: "developers-eth-blocks.png" }) {
-      childImageSharp {
-        gatsbyImageData(
-          width: 624
-          layout: CONSTRAINED
-          placeholder: BLURRED
-          quality: 100
-        )
-      }
-    }
-    ethereum: file(relativePath: { eq: "what-is-ethereum.png" }) {
-      childImageSharp {
-        gatsbyImageData(
-          width: 1440
-          layout: CONSTRAINED
-          placeholder: BLURRED
-          quality: 100
-        )
-      }
-    }
-    finance: file(relativePath: { eq: "finance_transparent.png" }) {
-      childImageSharp {
-        gatsbyImageData(
-          width: 800
-          layout: CONSTRAINED
-          placeholder: BLURRED
-          quality: 100
-        )
-      }
-    }
-    hackathon: file(relativePath: { eq: "hackathon_transparent.png" }) {
-      childImageSharp {
-        gatsbyImageData(
-          width: 1440
-          layout: CONSTRAINED
-          placeholder: BLURRED
-          quality: 100
-        )
-      }
-    }
-    docking: file(relativePath: { eq: "upgrades/core.png" }) {
-      childImageSharp {
-        gatsbyImageData(
-          width: 320
-          layout: CONSTRAINED
-          placeholder: BLURRED
-          quality: 100
-        )
-      }
-    }
-    eth: file(relativePath: { eq: "eth.png" }) {
-      childImageSharp {
-        gatsbyImageData(
-          width: 320
-          layout: CONSTRAINED
-          placeholder: BLURRED
-          quality: 100
-        )
-      }
-    }
-    doge: file(relativePath: { eq: "doge-computer.png" }) {
-      childImageSharp {
-        gatsbyImageData(
-          width: 320
-          layout: CONSTRAINED
-          placeholder: BLURRED
-          quality: 100
-        )
-      }
-    }
-    future: file(relativePath: { eq: "future_transparent.png" }) {
-      childImageSharp {
-        gatsbyImageData(
-          width: 320
-          layout: CONSTRAINED
-          placeholder: BLURRED
-          quality: 100
-        )
-      }
-    }
-    enterpriseFixed: file(relativePath: { eq: "enterprise-eth.png" }) {
-      childImageSharp {
-        gatsbyImageData(
-          width: 320
-          layout: CONSTRAINED
-          placeholder: BLURRED
-          quality: 100
-        )
-      }
-    }
-  }
-`

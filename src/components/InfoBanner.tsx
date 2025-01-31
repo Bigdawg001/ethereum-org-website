@@ -1,10 +1,11 @@
-import React from "react"
-import { Flex, FlexProps, Text } from "@chakra-ui/react"
-import Emoji from "./Emoji"
+import type { ReactNode } from "react"
+import { Flex, type FlexProps, LightMode } from "@chakra-ui/react"
 
-export interface IProps extends FlexProps {
-  children?: React.ReactNode
-  className?: string
+import Emoji from "@/components/Emoji"
+import Text from "@/components/OldText"
+
+type InfoBannerProps = FlexProps & {
+  children?: ReactNode
   emoji?: string
   isWarning?: boolean
   shouldCenter?: boolean
@@ -12,56 +13,52 @@ export interface IProps extends FlexProps {
   title?: string
 }
 
-const InfoBanner: React.FC<IProps> = ({
+const InfoBanner = ({
   children,
-  className,
   emoji,
-  isWarning = false,
-  shouldCenter = false,
-  shouldSpaceBetween = false,
+  isWarning,
+  shouldCenter,
+  shouldSpaceBetween,
   title,
   ...props
-}) => {
+}: InfoBannerProps) => {
   const banner = (
-    <Flex
-      align="center"
-      p={6}
-      borderRadius={"sm"}
-      maxW={shouldCenter ? "55rem" : "100%"}
-      sx={{
-        "*": {
-          color: "black300 !important",
-        },
-      }}
-      bg={isWarning ? "warning" : "infoBanner"}
-      direction={{ base: "column", sm: "row" }}
-      {...props}
-    >
-      {emoji && (
-        <Emoji
-          flexGrow="0"
-          flexShrink="0"
-          mr={{ base: 0, sm: 6 }}
-          mb={{ base: 2, sm: 0 }}
-          alignSelf={{ base: "flex-start", sm: "auto" }}
-          text={emoji}
-          fontSize="4xl"
-        />
-      )}
+    <LightMode>
       <Flex
-        display={{ base: "block", sm: shouldSpaceBetween ? "flex" : "block" }}
-        align={shouldSpaceBetween ? "center" : "auto"}
-        w={shouldSpaceBetween ? "100%" : "auto"}
-        justify={shouldSpaceBetween ? "space-between" : "auto"}
+        align="center"
+        p="6"
+        borderRadius="sm"
+        maxW={shouldCenter ? "55rem" : "100%"}
+        sx={{
+          ":not(button)": {
+            color: "black300 !important",
+          },
+        }}
+        bg={isWarning ? "warning" : "infoBanner"}
+        direction={{ base: "column", sm: "row" }}
+        {...props}
       >
-        {title && (
-          <Text fontSize="lg" fontWeight="700">
-            {title}
-          </Text>
+        {emoji && (
+          <Emoji
+            className="mb-2 me-0 flex-shrink-0 flex-grow-0 self-start text-4xl sm:mb-0 sm:me-6 sm:self-auto"
+            text={emoji}
+          />
         )}
-        {children}
+        <Flex
+          display={{ base: "block", sm: shouldSpaceBetween ? "flex" : "block" }}
+          align={shouldSpaceBetween ? "center" : "auto"}
+          w={shouldSpaceBetween ? "100%" : "auto"}
+          justify={shouldSpaceBetween ? "space-between" : "auto"}
+        >
+          {title && (
+            <Text fontSize="lg" fontWeight="bold">
+              {title}
+            </Text>
+          )}
+          {children}
+        </Flex>
       </Flex>
-    </Flex>
+    </LightMode>
   )
   return shouldCenter ? <Flex justify="center">{banner}</Flex> : banner
 }

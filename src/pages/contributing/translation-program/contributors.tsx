@@ -1,76 +1,72 @@
-// Libraries
-import React from "react"
-import {
-  Box,
-  BoxProps,
-  Flex,
-  Heading,
-  HeadingProps,
-  ListItem,
-  SimpleGrid,
-  Text,
-  UnorderedList,
-} from "@chakra-ui/react"
-import { useTranslation } from "gatsby-plugin-react-i18next"
-import { graphql, PageProps } from "gatsby"
-import type { Context } from "../../../types"
+import { BaseHTMLAttributes } from "react"
+import { useRouter } from "next/router"
+import { GetStaticProps } from "next/types"
+import { useTranslation } from "next-i18next"
+import { serverSideTranslations } from "next-i18next/serverSideTranslations"
 
-// Components
-import Breadcrumbs from "../../../components/Breadcrumbs"
-import Link from "../../../components/Link"
-import Translation from "../../../components/Translation"
-import PageMetadata from "../../../components/PageMetadata"
+import { BasePageProps, CostLeaderboardData, Lang } from "@/lib/types"
 
-// Utils
-import FeedbackCard from "../../../components/FeedbackCard"
+import Breadcrumbs from "@/components/Breadcrumbs"
+import FeedbackCard from "@/components/FeedbackCard"
+import MainArticle from "@/components/MainArticle"
+import PageMetadata from "@/components/PageMetadata"
+import { Flex } from "@/components/ui/flex"
+import InlineLink from "@/components/ui/Link"
+import { List, ListItem } from "@/components/ui/list"
 
-const Content = (props: BoxProps) => <Box py={4} px={8} w="full" {...props} />
-const ContentHeading = (props: HeadingProps) => (
-  <Heading lineHeight={1.4} {...props} />
+import { cn } from "@/lib/utils/cn"
+import { existsNamespace } from "@/lib/utils/existsNamespace"
+import { getLastDeployDate } from "@/lib/utils/getLastDeployDate"
+import { getLocaleTimestamp } from "@/lib/utils/time"
+import { getRequiredNamespacesForPage } from "@/lib/utils/translations"
+
+import allTimeData from "../../../data/translation-reports/alltime/alltime-data.json"
+
+export const getStaticProps = (async ({ locale }) => {
+  const lastDeployDate = getLastDeployDate()
+  const lastDeployLocaleTimestamp = getLocaleTimestamp(
+    locale as Lang,
+    lastDeployDate
+  )
+
+  const requiredNamespaces = getRequiredNamespacesForPage(
+    "/contributing/translation-program/contributors"
+  )
+
+  const contentNotTranslated = !existsNamespace(locale!, requiredNamespaces[2])
+
+  return {
+    props: {
+      ...(await serverSideTranslations(locale!, requiredNamespaces)),
+      contentNotTranslated,
+      lastDeployLocaleTimestamp,
+    },
+  }
+}) satisfies GetStaticProps<BasePageProps>
+
+const Content = ({ ...props }: BaseHTMLAttributes<HTMLHeadingElement>) => (
+  <MainArticle className="w-full px-10 py-4" {...props} />
 )
 
-const Contributors = ({
-  data,
-  location,
-}: PageProps<Queries.ContributorsPageQuery, Context>) => {
-  const { t } = useTranslation()
-  // TODO: Remove specific user checks once Acolad has updated their usernames
-  const translatorData =
-    data.allTimeData?.data?.flatMap(
-      // use flatMap to get cleaner object types withouts nulls
-      (item) => {
-        const user = item?.user
-        if (!user) return []
+const Text = ({
+  className,
+  ...props
+}: BaseHTMLAttributes<HTMLHeadingElement>) => (
+  <p className={cn("mb-6", className)} {...props} />
+)
 
-        const userName = user.username
-        if (!userName) return []
+const Contributors = () => {
+  const { t } = useTranslation(
+    "page-contributing-translation-program-contributors"
+  )
+  const router = useRouter()
 
-        const fullName = user.fullName ?? ""
-
-        return userName !== "ethdotorg" &&
-          !userName.includes("LQS_") &&
-          !userName.includes("REMOVED_USER") &&
-          !userName.includes("Aco_") &&
-          !fullName.includes("Aco_") &&
-          !userName.includes("Acc_") &&
-          !fullName.includes("Acc_") &&
-          userName !== "Finnish_Sandberg" &&
-          userName !== "Norwegian_Sandberg" &&
-          userName !== "Swedish_Sandberg"
-          ? [
-              {
-                user: {
-                  username: userName,
-                  fullName: fullName,
-                },
-              },
-            ]
-          : []
-      }
-    ) ?? []
+  const translators = (allTimeData as CostLeaderboardData[])
+    .map((item: CostLeaderboardData) => item.username)
+    .filter((item) => item.length > 0)
 
   return (
-    <Flex direction="column" align="center" w="full">
+    <Flex className="w-full flex-col items-center">
       <PageMetadata
         title={t(
           "page-contributing-translation-program-contributors-meta-title"
@@ -81,66 +77,57 @@ const Contributors = ({
       />
 
       <Content>
-        <Breadcrumbs slug={location.pathname} />
-        <ContentHeading
-          as="h1"
-          fontSize={{ base: "2.5rem", md: "5xl" }}
-          fontWeight={700}
-        >
-          <Translation id="page-contributing-translation-program-contributors-title" />
-        </ContentHeading>
-        <ContentHeading
-          as="h4"
-          fontSize={{ base: "md", md: "xl" }}
-          fontWeight={500}
-        >
-          <Text as="strong">
-            <Translation id="page-contributing-translation-program-contributors-number-of-contributors" />{" "}
-            {translatorData.length}
-          </Text>
-        </ContentHeading>
+        <Breadcrumbs slug={router.asPath} className="mt-12" />
+        <h1 className="my-8 leading-xs">
+          {t("page-contributing-translation-program-contributors-title")}
+        </h1>
+        <h4 className="my-8 leading-xs">
+          {t(
+            "page-contributing-translation-program-contributors-number-of-contributors"
+          )}{" "}
+          {translators.length}
+        </h4>
         <Text>
-          <Translation id="page-contributing-translation-program-contributors-our-translators-1" />
+          {t(
+            "page-contributing-translation-program-contributors-our-translators-1"
+          )}
         </Text>
         <Text>
-          <Translation id="page-contributing-translation-program-contributors-our-translators-2" />
+          {t(
+            "page-contributing-translation-program-contributors-our-translators-2"
+          )}
         </Text>
         <Text>
-          <Translation id="page-contributing-translation-program-contributors-our-translators-3" />
+          {t(
+            "page-contributing-translation-program-contributors-our-translators-3"
+          )}
         </Text>
         <Text>
-          <Translation id="page-languages-interested" />{" "}
-          <Link to="/contributing/translation-program/">
-            <Translation id="page-languages-learn-more" />
-          </Link>
+          {t("common:page-languages-interested")}{" "}
+          <InlineLink href="/contributing/translation-program/">
+            {t("common:page-languages-learn-more")}
+          </InlineLink>
           .
         </Text>
-        <ContentHeading
-          as="h2"
-          fontSize={{ base: "2xl", md: "2rem" }}
-          fontWeight={600}
-        >
-          <Translation id="page-contributing-translation-program-contributors-thank-you" />
-        </ContentHeading>
-        <SimpleGrid as={UnorderedList} columns={[1, 2, 3, 4, 6]} ms="1.45rem">
-          {translatorData
-            .map(({ user }) => user.username)
+        <h2 className="mb-8 mt-12 leading-xs">
+          {t("page-contributing-translation-program-contributors-thank-you")}
+        </h2>
+        <List className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+          {translators
             .sort((user1, user2) =>
               user1.toLowerCase().localeCompare(user2.toLowerCase())
             )
-            .map((user) => {
-              return (
-                <ListItem key={user} color="text300">
-                  {user}
-                </ListItem>
-              )
-            })}
-        </SimpleGrid>
+            .map((user) => (
+              <ListItem key={user} className="text-body-medium">
+                {user}
+              </ListItem>
+            ))}
+        </List>
         <Text>
-          <Translation id="page-languages-interested" />{" "}
-          <Link to="/contributing/translation-program/">
-            <Translation id="page-languages-learn-more" />
-          </Link>
+          {t("common:page-languages-interested")}{" "}
+          <InlineLink href="/contributing/translation-program/">
+            {t("common:page-languages-learn-more")}
+          </InlineLink>
           .
         </Text>
       </Content>
@@ -152,36 +139,3 @@ const Contributors = ({
 }
 
 export default Contributors
-
-export const query = graphql`
-  query ContributorsPage($languagesToFetch: [String!]!) {
-    locales: allLocale(
-      filter: {
-        language: { in: $languagesToFetch }
-        ns: {
-          in: [
-            "page-contributing-translation-program-contributors"
-            "page-languages"
-            "common"
-          ]
-        }
-      }
-    ) {
-      edges {
-        node {
-          ns
-          data
-          language
-        }
-      }
-    }
-    allTimeData: alltimeJson {
-      data {
-        user {
-          username
-          fullName
-        }
-      }
-    }
-  }
-`

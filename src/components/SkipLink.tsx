@@ -1,33 +1,19 @@
-import React from "react"
-import { Box } from "@chakra-ui/react"
+import { useTranslation } from "next-i18next"
 
-import Translation from "./Translation"
-import Link from "../components/Link"
+import { MAIN_CONTENT_ID } from "@/lib/constants"
 
-export interface IProps {
-  hrefId: string
-}
+import { BaseLink } from "./ui/Link"
 
-export const SkipLink: React.FC<IProps> = ({ hrefId }) => {
+export const SkipLink = () => {
+  const { t } = useTranslation()
   return (
-    <Box bg="primary">
-      <Link
-        href={hrefId}
-        lineHeight="taller"
-        position="absolute"
-        top="-12"
-        ml="2"
-        color="background"
-        textDecorationLine="none"
-        _hover={{ textDecoration: "none" }}
-        _focus={{ position: "static" }}
+    <div className="bg-primary-low-contrast focus-within:p-4">
+      <BaseLink
+        href={"#" + MAIN_CONTENT_ID}
+        className="absolute -top-14 rounded border bg-primary px-4 py-2 leading-8 text-background no-underline hover:no-underline focus:static"
       >
-        <Translation id="skip-to-main-content" />
-      </Link>
-    </Box>
+        {t("skip-to-main-content")}
+      </BaseLink>
+    </div>
   )
-}
-
-export const SkipLinkAnchor: React.FC<{ id: string }> = ({ id }) => {
-  return <Box height="80px" mt="-80px" id={id}></Box>
 }

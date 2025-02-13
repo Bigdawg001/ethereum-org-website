@@ -1,40 +1,59 @@
-import React from "react"
+import { Children, type ReactElement } from "react"
+import { useTranslation } from "next-i18next"
+import { IoMdCopy } from "react-icons/io"
+import { MdCheck } from "react-icons/md"
+
+import { Button } from "./ui/buttons/Button"
 import {
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalCloseButton,
-} from "@chakra-ui/react"
-export interface IProps {
-  children?: React.ReactNode
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "./ui/dialog-modal"
+
+import { useClipboard } from "@/hooks/useClipboard"
+
+type CodeModalProps = {
+  title: string
+  children?: ReactElement
   isOpen: boolean
   setIsOpen: (isOpen: boolean) => void
-  title: string
 }
 
-const CodeModal: React.FC<IProps> = ({
-  children,
-  isOpen,
-  setIsOpen,
-  title,
-}) => {
-  return (
-    <Modal
-      isOpen={isOpen}
-      scrollBehavior="inside"
-      variant="code"
-      onClose={() => setIsOpen(false)}
-    >
-      <ModalOverlay />
-      <ModalContent>
-        <ModalHeader>{title}</ModalHeader>
-        <ModalCloseButton />
+const CodeModal = ({ children, isOpen, setIsOpen, title }: CodeModalProps) => {
+  const { t } = useTranslation()
+  const codeSnippet = (Children.toArray(children)[0] as ReactElement).props
+    .children.props.children
 
-        <ModalBody>{children}</ModalBody>
-      </ModalContent>
-    </Modal>
+  const { onCopy, hasCopied } = useClipboard()
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogContent className="absolute inset-0 mb-0 mt-auto max-h-[50%] max-w-[100vw]">
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+        </DialogHeader>
+        <DialogDescription asChild>
+          <div className="overflow-y-auto">{children}</div>
+        </DialogDescription>
+        <Button
+          variant="outline"
+          onClick={() => onCopy(codeSnippet)}
+          className="absolute right-19 top-24" // Force right, code always LTR
+        >
+          {hasCopied ? (
+            <>
+              <MdCheck /> {t("copied")}
+            </>
+          ) : (
+            <>
+              <IoMdCopy /> {t("copy")}
+            </>
+          )}
+        </Button>
+      </DialogContent>
+    </Dialog>
   )
 }
 

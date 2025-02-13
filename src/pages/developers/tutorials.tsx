@@ -1,223 +1,110 @@
-import React, { useEffect, useMemo, useState } from "react"
-import styled from "@emotion/styled"
-import { graphql, PageProps } from "gatsby"
-import { useI18next, useTranslation } from "gatsby-plugin-react-i18next"
+import React, {
+  type ButtonHTMLAttributes,
+  forwardRef,
+  HTMLAttributes,
+  useEffect,
+  useMemo,
+  useState,
+} from "react"
+import { GetStaticProps, InferGetServerSidePropsType } from "next"
+import { useRouter } from "next/router"
+import { useTranslation } from "next-i18next"
+import { serverSideTranslations } from "next-i18next/serverSideTranslations"
+import { FaGithub } from "react-icons/fa"
 
-import Translation from "../../components/Translation"
-import Icon from "../../components/Icon"
-import ButtonLink from "../../components/ButtonLink"
-import Link from "../../components/Link"
-import Modal from "../../components/Modal"
-import PageMetadata from "../../components/PageMetadata"
-import Tag from "../../components/Tag"
-import TutorialTags from "../../components/TutorialTags"
-import Emoji from "../../components/Emoji"
-import {
-  ButtonSecondary,
-  FakeLink,
-  Page,
-} from "../../components/SharedStyledComponents"
+import { BasePageProps, Lang } from "@/lib/types"
 
-import { getLocaleTimestamp, INVALID_DATETIME } from "../../utils/time"
+import Emoji from "@/components/Emoji"
+import FeedbackCard from "@/components/FeedbackCard"
+import Heading from "@/components/Heading"
+import MainArticle from "@/components/MainArticle"
+import PageMetadata from "@/components/PageMetadata"
+import Translation from "@/components/Translation"
+import { getSkillTranslationId, Skill } from "@/components/TutorialMetadata"
+import TutorialTags from "@/components/TutorialTags"
+import { Button, ButtonLink } from "@/components/ui/buttons/Button"
+import Modal from "@/components/ui/dialog-modal"
+import { Flex, FlexProps } from "@/components/ui/flex"
+import { Tag, TagButton } from "@/components/ui/tag"
 
-import externalTutorials from "../../data/externalTutorials.json"
-import FeedbackCard from "../../components/FeedbackCard"
-import { getSkillTranslationId, Skill } from "../../components/TutorialMetadata"
-import { Context } from "../../types"
-import { Lang } from "../../utils/languages"
+import { cn } from "@/lib/utils/cn"
+import { existsNamespace } from "@/lib/utils/existsNamespace"
+import { getLastDeployDate } from "@/lib/utils/getLastDeployDate"
+import { trackCustomEvent } from "@/lib/utils/matomo"
+import { getTutorialsData } from "@/lib/utils/md"
+import { getLocaleTimestamp } from "@/lib/utils/time"
+import { getRequiredNamespacesForPage } from "@/lib/utils/translations"
 import {
   filterTutorialsByLang,
   getSortedTutorialTagsForLang,
-} from "../../utils/tutorials"
-import { Badge } from "@chakra-ui/react"
+} from "@/lib/utils/tutorial"
 
-const SubSlogan = styled.p`
-  font-size: 1.25rem;
-  line-height: 140%;
-  color: ${(props) => props.theme.colors.text200};
-  margin-bottom: 1rem;
-  text-align: center;
-`
+import externalTutorials from "@/data/externalTutorials.json"
 
-const TutorialCard = styled(Link)`
-  text-decoration: none;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  color: ${(props) => props.theme.colors.text} !important;
-  box-shadow: 0 1px 1px ${(props) => props.theme.colors.tableItemBoxShadow};
-  margin-bottom: 1px;
-  padding: 2rem;
-  width: 100%;
-  color: #000000;
-  &:hover {
-    text-decoration: none;
-    border-radius: 4px;
-    box-shadow: 0 0 1px ${(props) => props.theme.colors.primary};
-    background: ${(props) => props.theme.colors.tableBackgroundHover};
-  }
-`
+import { useBreakpointValue } from "@/hooks/useBreakpointValue"
 
-const TutorialContainer = styled.div`
-  box-shadow: ${(props) => props.theme.colors.tableBoxShadow};
-  margin-bottom: 2rem;
-  margin-top: 2rem;
-  width: 66%;
-  @media (max-width: ${(props) => props.theme.breakpoints.m}) {
-    width: 100%;
-  }
-`
-
-const StyledPage = styled(Page)`
-  margin-top: 4rem;
-`
-
-const PillContainer = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  width: 100%;
-`
-
-const About = styled.p`
-  color: ${(props) => props.theme.colors.text200};
-`
-
-const Author = styled.p`
-  color: ${(props) => props.theme.colors.text200};
-  font-size: 0.875rem;
-  text-transform: uppercase;
-`
-
-const Title = styled.p<{ isExternal?: boolean | null }>`
-  color: ${(props) => props.theme.colors.text};
-  font-weight: 600;
-  font-size: 1.5rem;
-  margin-right: 6rem;
-
-  &:after {
-    margin-left: 0.125em;
-    margin-right: 0.3em;
-    display: ${(props) => (props.isExternal ? "inline" : "none")};
-    content: "↗";
-    transition: all 0.1s ease-in-out;
-    font-style: normal;
-  }
-  @media (max-width: ${(props) => props.theme.breakpoints.m}) {
-    margin-right: 0rem;
-  }
-`
-
-const PageTitle = styled.h1`
-  font-style: normal;
-  font-weight: normal;
-  font-family: ${(props) => props.theme.fonts.monospace};
-  text-transform: uppercase;
-  font-weight: 600;
-  font-size: 2rem;
-  line-height: 140%;
-  text-align: center;
-  margin: 0 0 1.625rem;
-  @media (max-width: ${(props) => props.theme.breakpoints.s}) {
-    margin: 1rem;
-  }
-`
-
-const TitleContainer = styled.div`
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: -1rem;
-  align-items: flex-start;
-  @media (max-width: ${(props) => props.theme.breakpoints.m}) {
-    flex-direction: column;
-    margin-bottom: 2rem;
-  }
-`
-
-const TagsContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  margin: 2rem 2rem;
-  padding-bottom: 2rem;
-  border-bottom: 1px solid ${(props) => props.theme.colors.border};
-  @media (max-width: ${(props) => props.theme.breakpoints.m}) {
-    flex-direction: column;
-    padding: 1rem 0rem;
-  }
-`
-const TagContainer = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  @media (max-width: ${(props) => props.theme.breakpoints.m}) {
-    max-width: 100%;
-    margin-bottom: 1rem;
-  }
-`
-const ClearLink = styled.button`
-  color: ${(props) => props.theme.colors.primary};
-  text-decoration: underline;
-  background: none;
-  border: none;
-  cursor: pointer;
-`
-
-const ResultsContainer = styled.div`
-  margin-top: 0rem;
-  text-align: center;
-  padding: 3rem;
-`
-
-const GithubButton = styled(ButtonLink)`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 0.5rem;
-`
-
-const GithubIcon = styled(Icon)`
-  fill: ${(props) => props.theme.colors.text};
-  margin-right: 0.5rem;
-`
-
-const ModalBody = styled.div`
-  display: flex;
-  @media (max-width: ${(props) => props.theme.breakpoints.m}) {
-    flex-direction: column;
-    max-height: 16rem;
-    overflow-y: scroll;
-  }
-`
-
-const ModalOption = styled.div`
-  border: 1px solid ${(props) => props.theme.colors.border};
-  border-radius: 4px;
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
-  width: 50%;
-  margin: 0.5rem;
-  justify-content: space-between;
-  margin-left: 0rem;
-  margin-bottom: 1.5rem;
-  @media (max-width: ${(props) => props.theme.breakpoints.m}) {
-    width: 100%;
-    margin: 0.5rem 0;
-  }
-`
-
-const ModalTitle = styled.h2`
-  margin-top: 0;
-  margin-bottom: 1rem;
-`
-
-const published = (locale: string, published: string) => {
-  const localeTimestamp = getLocaleTimestamp(locale as Lang, published)
-  return localeTimestamp !== INVALID_DATETIME ? (
-    <span>
-      <Emoji text=":calendar:" fontSize="sm" ml={2} mr={2} /> {localeTimestamp}
-    </span>
-  ) : null
+type Props = BasePageProps & {
+  internalTutorials: ITutorial[]
 }
+
+type LinkFlexProps = FlexProps & {
+  href: string
+}
+
+const FilterTag = forwardRef<
+  HTMLButtonElement,
+  { isActive: boolean; name: string } & ButtonHTMLAttributes<HTMLButtonElement>
+>((props, ref) => {
+  const { isActive, name, ...rest } = props
+  return (
+    <TagButton
+      ref={ref}
+      variant={isActive ? "solid" : "outline"}
+      status={isActive ? "tag" : "normal"}
+      className="justify-center"
+      {...rest}
+    >
+      {name}
+    </TagButton>
+  )
+})
+
+FilterTag.displayName = "FilterTag"
+
+const Text = ({ className, ...props }: HTMLAttributes<HTMLHeadElement>) => (
+  <p className={cn("mb-6", className)} {...props} />
+)
+
+const LinkFlex = ({ href, children, ...props }: LinkFlexProps) => {
+  return (
+    <Flex asChild {...props}>
+      <a href={href}>{children}</a>
+    </Flex>
+  )
+}
+
+export const getStaticProps = (async ({ locale }) => {
+  const requiredNamespaces = getRequiredNamespacesForPage(
+    "/developers/tutorials"
+  )
+
+  const contentNotTranslated = !existsNamespace(locale!, requiredNamespaces[2])
+
+  const lastDeployDate = getLastDeployDate()
+  const lastDeployLocaleTimestamp = getLocaleTimestamp(
+    locale as Lang,
+    lastDeployDate
+  )
+
+  return {
+    props: {
+      ...(await serverSideTranslations(locale!, requiredNamespaces)),
+      contentNotTranslated,
+      internalTutorials: getTutorialsData(locale!),
+      lastDeployLocaleTimestamp,
+    },
+  }
+}) satisfies GetStaticProps<Props>
 
 export interface IExternalTutorial {
   url: string
@@ -233,7 +120,7 @@ export interface IExternalTutorial {
 }
 
 export interface ITutorial {
-  to: string
+  href: string
   title: string
   description: string
   author: string
@@ -245,23 +132,30 @@ export interface ITutorial {
   isExternal: boolean
 }
 
-export interface ITutorialsState {
-  activeTagNames: Array<string>
-  filteredTutorials: Array<ITutorial>
+const published = (locale: string, published: string) => {
+  const localeTimestamp = getLocaleTimestamp(locale as Lang, published)
+
+  return localeTimestamp !== "Invalid Date" ? (
+    <span>
+      <Emoji text=":calendar:" className="me-2 ms-2 text-sm" />
+      {localeTimestamp}
+    </span>
+  ) : null
 }
 
-const TutorialsPage = ({
-  data,
-  pageContext,
-}: PageProps<Queries.DevelopersTutorialsPageQuery, Context>) => {
+const TutorialPage = ({
+  internalTutorials,
+  contentNotTranslated,
+}: InferGetServerSidePropsType<typeof getStaticProps>) => {
+  const { locale } = useRouter()
   const filteredTutorialsByLang = useMemo(
     () =>
       filterTutorialsByLang(
-        data.allTutorials.nodes,
+        internalTutorials,
         externalTutorials,
-        pageContext.language
+        locale as Lang
       ),
-    [pageContext.language]
+    [internalTutorials, locale]
   )
 
   const allTags = useMemo(
@@ -270,7 +164,6 @@ const TutorialsPage = ({
   )
 
   const { t } = useTranslation()
-  const { language } = useI18next()
   const [isModalOpen, setModalOpen] = useState(false)
   const [filteredTutorials, setFilteredTutorials] = useState(
     filteredTutorialsByLang
@@ -287,7 +180,7 @@ const TutorialsPage = ({
     }
 
     setFilteredTutorials(tutorials)
-  }, [selectedTags])
+  }, [filteredTutorialsByLang, selectedTags])
 
   const handleTagSelect = (tagName: string) => {
     const tempSelectedTags = selectedTags
@@ -295,207 +188,202 @@ const TutorialsPage = ({
     const index = tempSelectedTags.indexOf(tagName)
     if (index > -1) {
       tempSelectedTags.splice(index, 1)
+      trackCustomEvent({
+        eventCategory: "tutorial tags",
+        eventAction: "click",
+        eventName: `${tagName} remove`,
+      })
     } else {
       tempSelectedTags.push(tagName)
+      trackCustomEvent({
+        eventCategory: "tutorial tags",
+        eventAction: "click",
+        eventName: `${tagName} add`,
+      })
     }
 
     setSelectedTags([...tempSelectedTags])
   }
 
+  const dir = contentNotTranslated ? "ltr" : "unset"
+
+  const modalSize = useBreakpointValue({ base: "xl", md: "md" } as const)
   return (
-    <StyledPage>
+    <MainArticle
+      className={`mx-auto my-0 mt-16 flex w-full flex-col items-center ${dir}`}
+    >
       <PageMetadata
-        title={t("page-tutorials-meta-title")}
-        description={t("page-tutorials-meta-description")}
+        title={t("page-developers-tutorials:page-tutorials-meta-title")}
+        description={t(
+          "page-developers-tutorials:page-tutorials-meta-description"
+        )}
       />
-      <PageTitle>
-        <Translation id="page-tutorial-title" />
-      </PageTitle>
-      <SubSlogan>
-        <Translation id="page-tutorial-subtitle" />
-      </SubSlogan>
-      <Modal isOpen={isModalOpen} setIsOpen={setModalOpen}>
-        <ModalTitle>
-          <Translation id="page-tutorial-submit-btn" />
-        </ModalTitle>
-        <p>
-          <Translation id="page-tutorial-listing-policy-intro" />{" "}
-          <Link to="/contributing/content-resources/">
-            <Translation id="page-tutorial-listing-policy" />
-          </Link>
-        </p>
-        <p>
-          <Translation id="page-tutorial-submit-tutorial" />
-        </p>
-        <ModalBody>
-          <ModalOption>
-            <p>
-              <b>
-                <Translation id="page-tutorial-new-github" />
-              </b>
-              <br />
-              <Translation id="page-tutorial-new-github-desc" />
-            </p>
-            <GithubButton
+      <Heading
+        as="h1"
+        fontStyle="normal"
+        fontWeight="semibold"
+        fontFamily="monospace"
+        textTransform="uppercase"
+        fontSize="2rem"
+        lineHeight="140%"
+        textAlign="center"
+        mt={{ base: 4, sm: 0 }}
+        mx={{ base: 4, sm: 0 }}
+        mb={{ base: 4, sm: "1.625rem" }}
+      >
+        <Translation id="page-developers-tutorials:page-tutorial-title" />
+      </Heading>
+      <Text className="mb-4 text-center leading-xs text-body-medium">
+        <Translation id="page-developers-tutorials:page-tutorial-subtitle" />
+      </Text>
+
+      <Modal
+        open={isModalOpen}
+        onOpenChange={(open) => setModalOpen(open)}
+        size={modalSize}
+        contentProps={{ dir }}
+        title={
+          <Translation id="page-developers-tutorials:page-tutorial-submit-btn" />
+        }
+      >
+        <Text>
+          <Translation id="page-developers-tutorials:page-tutorial-listing-policy-intro" />
+        </Text>
+        <Flex className="flex-col gap-2 md:flex-row">
+          <Flex className="w-full flex-col justify-between rounded-sm border border-border p-4">
+            <b>
+              <Translation id="page-developers-tutorials:page-tutorial-create-an-issue" />
+            </b>
+            <Text>
+              <Translation id="page-developers-tutorials:page-tutorial-create-an-issue-desc" />
+            </Text>
+            <ButtonLink
               variant="outline"
-              to="https://github.com/ethereum/ethereum-org-website/issues/new?assignees=&labels=Type%3A+Feature&template=suggest_tutorial.yaml&title="
+              href="https://github.com/ethereum/ethereum-org-website/issues/new?assignees=&labels=Type%3A+Feature&template=suggest_tutorial.yaml&title="
             >
-              <GithubIcon name="github" />{" "}
-              <span>
-                <Translation id="page-tutorial-raise-issue-btn" />
-              </span>
-            </GithubButton>
-          </ModalOption>
-          <ModalOption>
-            <p>
-              <b>
-                <Translation id="page-tutorial-pull-request" />
-              </b>
-              <br />
-              <Translation id="page-tutorial-pull-request-desc-1" />{" "}
-              <code>
-                <Translation id="page-tutorial-pull-request-desc-2" />
-              </code>{" "}
-              <Translation id="page-tutorial-pull-request-desc-3" />
-            </p>
-            <GithubButton
-              variant="outline"
-              to="https://github.com/ethereum/ethereum-org-website/new/dev/src/content/developers/tutorials"
-            >
-              <GithubIcon name="github" />{" "}
-              <span>
-                <Translation id="page-tutorial-pull-request-btn" />
-              </span>
-            </GithubButton>
-          </ModalOption>
-        </ModalBody>
+              <FaGithub />
+              <Translation id="page-developers-tutorials:page-tutorial-raise-issue-btn" />
+            </ButtonLink>
+          </Flex>
+        </Flex>
       </Modal>
-      <ButtonSecondary onClick={() => setModalOpen(true)}>
-        <Translation id="page-tutorial-submit-btn" />
-      </ButtonSecondary>
-      <TutorialContainer>
-        <TagsContainer>
-          <TagContainer>
-            {Object.entries(allTags).map(([tagName, tagCount]) => {
-              const name = `${tagName} (${tagCount})`
-              const isActive = selectedTags.includes(tagName)
-              return (
-                <Tag
-                  name={name}
-                  key={name}
-                  isActive={isActive}
-                  shouldShowIcon={false}
-                  onClick={handleTagSelect}
-                  value={tagName}
-                />
-              )
-            })}
+
+      <Button
+        className="px-3 py-2 text-body"
+        variant="outline"
+        onClick={() => {
+          setModalOpen(true)
+          trackCustomEvent({
+            eventCategory: "tutorials tags",
+            eventAction: "click",
+            eventName: "submit",
+          })
+        }}
+      >
+        <Translation id="page-developers-tutorials:page-tutorial-submit-btn" />
+      </Button>
+
+      <div className="my-8 w-full shadow-table-box md:w-2/3">
+        <Flex className="m-8 flex-col justify-center border-b border-border px-0 pb-4 pt-4 md:pb-8">
+          <Flex className="mb-4 max-w-full flex-wrap items-center gap-2">
+            <div className="flex w-full flex-wrap gap-2 lg:grid lg:grid-cols-3 lg:gap-4 xl:grid-cols-4 2xl:grid-cols-5">
+              {Object.entries(allTags).map(([tagName, tagCount], idx) => {
+                const name = `${tagName} (${tagCount})`
+                const isActive = selectedTags.includes(tagName)
+                return (
+                  <FilterTag
+                    key={idx}
+                    onClick={() => handleTagSelect(tagName)}
+                    {...{ name, isActive }}
+                  />
+                )
+              })}
+            </div>
             {selectedTags.length > 0 && (
-              <ClearLink onClick={() => setSelectedTags([])}>
-                <Translation id="page-find-wallet-clear" />
-              </ClearLink>
+              <Button
+                className="cursor-pointer p-0 text-primary underline"
+                variant="ghost"
+                onClick={() => {
+                  setSelectedTags([])
+                  trackCustomEvent({
+                    eventCategory: "tutorial tags",
+                    eventAction: "click",
+                    eventName: "clear",
+                  })
+                }}
+              >
+                <Translation id="page-developers-tutorials:page-find-wallet-clear" />
+              </Button>
             )}
-          </TagContainer>
-        </TagsContainer>
+          </Flex>
+        </Flex>
         {filteredTutorials.length === 0 && (
-          <ResultsContainer>
-            <Emoji text=":crying_face:" fontSize="5xl" mb={8} mt={8} />
-            <h2>
-              <Translation id="page-tutorial-tags-error" />
+          <div className="mt-0 p-12 text-center">
+            <Emoji text=":crying_face:" className="my-8 text-5xl" />
+            <h2 className="mb-8 mt-12 leading-xs">
+              <Translation id="page-developers-tutorials:page-tutorial-tags-error" />
             </h2>
-            <p>
-              <Translation id="page-find-wallet-try-removing" />
-            </p>
-          </ResultsContainer>
+            <Text>
+              <Translation id="page-developers-tutorials:page-find-wallet-try-removing" />
+            </Text>
+          </div>
         )}
         {filteredTutorials.map((tutorial) => {
           return (
-            <TutorialCard
-              key={tutorial.to}
-              to={tutorial.to ?? undefined}
-              hideArrow
+            <LinkFlex
+              className="mb-px w-full flex-col justify-between border-b p-8 text-border no-underline duration-100 hover:bg-background-highlight"
+              key={tutorial.href}
+              href={tutorial.href ?? undefined}
             >
-              <TitleContainer>
-                <Title isExternal={tutorial.isExternal}>{tutorial.title}</Title>
-                <Badge variant="secondary">
+              <Flex className="mb-8 flex-col items-start justify-between gap-y-4 md:-mb-4 md:flex-row">
+                <Text
+                  className={cn(
+                    "relative me-0 text-2xl font-semibold text-body after:ml-2 after:inline-block after:italic after:transition-all after:duration-100 after:ease-in-out after:content-['↗'] md:me-24",
+                    tutorial.isExternal ? "after:inline-block" : "after:hidden"
+                  )}
+                >
+                  {tutorial.title}
+                </Text>
+                <Tag variant="outline">
                   <Translation id={getSkillTranslationId(tutorial.skill!)} />
-                </Badge>
-              </TitleContainer>
-              <Author>
-                {/* TODO: Refactor each tutorial tag as a component */}
-                <Emoji text=":writing_hand:" fontSize="sm" mr={2} />
-                {tutorial.author} •
-                {published(language, tutorial.published ?? "")}
+                </Tag>
+              </Flex>
+              <Text className="mt-6 uppercase text-body-medium">
+                <Emoji text=":writing_hand:" className="me-2 text-sm" />
+                {tutorial.author}
+                {tutorial.published ? (
+                  <> •{published(locale!, tutorial.published!)}</>
+                ) : null}
                 {tutorial.timeToRead && (
                   <>
                     {" "}
                     •
-                    <Emoji text=":stopwatch:" fontSize="sm" ml={2} mr={2} />
+                    <Emoji text=":stopwatch:" className="mx-2 text-sm" />
                     {tutorial.timeToRead}{" "}
-                    <Translation id="page-tutorial-read-time" />
+                    <Translation id="page-developers-tutorials:page-tutorial-read-time" />
                   </>
                 )}
                 {tutorial.isExternal && (
                   <>
                     {" "}
-                    •<Emoji text=":link:" fontSize="sm" ml={2} mr={2} />
-                    <FakeLink>
-                      <Translation id="page-tutorial-external-link" />
-                    </FakeLink>
+                    •<Emoji text=":link:" className="mx-2 text-sm" />
+                    <span className="cursor-pointer text-primary">
+                      <Translation id="page-developers-tutorials:page-tutorial-external-link" />
+                    </span>
                   </>
                 )}
-              </Author>
-              <About>{tutorial.description}</About>
-              <PillContainer>
+              </Text>
+              <Text className="text-body-medium">{tutorial.description}</Text>
+              <Flex className="w-full flex-wrap">
                 <TutorialTags tags={tutorial.tags ?? []} />
-              </PillContainer>
-            </TutorialCard>
+              </Flex>
+            </LinkFlex>
           )
         })}
-      </TutorialContainer>
+      </div>
       <FeedbackCard />
-    </StyledPage>
+    </MainArticle>
   )
 }
-export default TutorialsPage
 
-export const query = graphql`
-  query DevelopersTutorialsPage($languagesToFetch: [String!]!) {
-    locales: allLocale(
-      filter: {
-        language: { in: $languagesToFetch }
-        ns: { in: ["page-developers-tutorials", "common"] }
-      }
-    ) {
-      edges {
-        node {
-          ns
-          data
-          language
-        }
-      }
-    }
-    allTutorials: allMdx(
-      filter: { slug: { regex: "/tutorials/" } }
-      sort: { frontmatter: { published: DESC } }
-    ) {
-      nodes {
-        fields {
-          slug
-          readingTime {
-            minutes
-          }
-        }
-        frontmatter {
-          title
-          description
-          tags
-          author
-          skill
-          published
-          lang
-        }
-      }
-    }
-  }
-`
+export default TutorialPage

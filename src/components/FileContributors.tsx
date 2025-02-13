@@ -1,360 +1,126 @@
-import React, { useState } from "react"
-import { useI18next } from "gatsby-plugin-react-i18next"
-import { css, Theme } from "@emotion/react"
-import styled from "@emotion/styled"
-import { useQuery, gql } from "@apollo/client"
+import { BaseHTMLAttributes, useState } from "react"
 
-import ButtonLink from "./ButtonLink"
-import Icon from "./Icon"
-import Link from "./Link"
-import Modal from "./Modal"
-import Translation from "./Translation"
-import { ButtonSecondary } from "./SharedStyledComponents"
-import { getLocaleTimestamp } from "../utils/time"
-import { Lang } from "../utils/languages"
+import type { ChildOnlyProp, FileContributor } from "@/lib/types"
 
-const loadingStyles = (theme: Theme) => css`
-  font-size: 0;
-  background: linear-gradient(
-    -90deg,
-    ${theme.colors.lightBorder} 0%,
-    ${theme.colors.searchBackgroundEmpty} 50%,
-    ${theme.colors.lightBorder} 100%
-  );
-  background-size: 400% 400%;
-  animation: pulse 1.2s ease-in-out infinite;
+import InlineLink from "@/components/Link"
+import Translation from "@/components/Translation"
+import { Button } from "@/components/ui/buttons/Button"
+import { Flex, VStack } from "@/components/ui/flex"
+import { ListItem, UnorderedList } from "@/components/ui/list"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
-  @keyframes pulse {
-    0% {
-      background-position: 0% 0%;
-    }
-    100% {
-      background-position: -135% 0%;
-    }
-  }
-`
+import { trackCustomEvent } from "@/lib/utils/matomo"
 
-const Container = styled.div`
-  display: flex;
-  justify-content: space-between;
-  position: relative;
+import { Avatar } from "./ui/avatar"
+import Modal from "./ui/dialog-modal"
 
-  border-radius: 2px;
-  padding: 0.5rem;
-  @media (max-width: ${(props) => props.theme.breakpoints.m}) {
-    flex-direction: column;
-    padding-top: 0rem;
-    padding-left: 0rem;
-    padding-right: 0rem;
-    border-bottom: 0px solid ${(props) => props.theme.colors.border};
-  }
-  @media (max-width: ${(props) => props.theme.breakpoints.l}) {
-    border-bottom: 0px solid ${(props) => props.theme.colors.border};
-  }
-`
+import { useBreakpointValue } from "@/hooks/useBreakpointValue"
 
-const SkeletonContainer = styled(Container)<{
-  loading: boolean
-}>`
-  justify-content: flex-start;
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  left: 0;
-  top: 0;
-  opacity: 1;
-  transition: opacity 0.15s ease-in-out;
+const ContributorList = ({ children }: Required<ChildOnlyProp>) => (
+  <ScrollArea className="h-64 w-full">
+    <UnorderedList className="m-0">{children}</UnorderedList>
+  </ScrollArea>
+)
 
-  ${({ loading }) =>
-    !loading &&
-    `
-    opacity: 0;
-    pointer-events: none;
-  `}
-`
+const ContributorAvatar = ({
+  contributor,
+  label,
+}: ContributorProps & { label?: string }) => (
+  <Avatar
+    src={contributor.avatar_url}
+    name={contributor.login}
+    href={`https://github.com/${contributor.login}`}
+    // `size-10` is not part of the "size" variants
+    className="me-2 size-10"
+    label={label}
+  />
+)
 
-const LeftContent = styled.div`
-  display: flex;
-  align-items: center;
-  margin-right: 1rem;
-  @media (max-width: ${(props) => props.theme.breakpoints.m}) {
-    font-size: ${(props) => props.theme.fontSizes.s};
-  }
-`
+type ContributorProps = { contributor: FileContributor }
+const Contributor = ({ contributor }: ContributorProps) => (
+  <ListItem className="flex items-center p-2">
+    <ContributorAvatar
+      contributor={contributor}
+      label={"@" + contributor.login}
+    />
+  </ListItem>
+)
 
-const SkeletonLeftContent = styled(LeftContent)`
-  flex: 1;
-  @media (max-width: ${(props) => props.theme.breakpoints.l}) {
-    margin-right: 2rem;
-  }
-  @media (max-width: ${(props) => props.theme.breakpoints.m}) {
-    margin-right: 1rem;
-    flex: none;
-  }
-`
-
-const Avatar = styled.img`
-  height: 40px;
-  width: 40px;
-  margin-right: 0.5rem;
-  border-radius: 50%;
-`
-
-const SkeletonAvatar = styled.div`
-  height: 40px;
-  width: 40px;
-  margin-right: 0.5rem;
-  border-radius: 50%;
-  ${({ theme }) => loadingStyles(theme)}
-`
-
-const Info = styled.div`
-  line-height: 130%;
-  color: ${(props) => props.theme.colors.text200};
-`
-
-const SkeletonInfo = styled(Info)`
-  ${({ theme }) => loadingStyles(theme)}
-  height: 40px;
-  flex: 1;
-  border-radius: 3px;
-`
-
-const ButtonContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-content: center;
-`
-
-const SkeletonButtonContainer = styled(ButtonContainer)`
-  ${({ theme }) => loadingStyles(theme)}
-  width: 145px;
-  border-radius: 3px;
-  @media (max-width: ${(props) => props.theme.breakpoints.l}) {
-    margin-top: 1rem;
-    justify-content: center;
-    height: 40px;
-  }
-  @media (max-width: ${(props) => props.theme.breakpoints.m}) {
-    width: 100%;
-    margin-top: 1rem;
-  }
-`
-
-const ContributorsButton = styled(ButtonSecondary)<{ loading: boolean }>`
-  background-color: ${(props) => props.theme.colors.background};
-  margin-top: 0;
-  height: 40px;
-  border: 0px;
-  &:hover {
-    border: 0px;
-  }
-  @media (max-width: ${(props) => props.theme.breakpoints.l}) {
-    margin-top: 1rem;
-    margin-bottom: 0.5rem;
-    justify-content: center;
-  }
-
-  ${({ loading }) =>
-    loading &&
-    `
-    visibility: hidden;
-  `}
-`
-
-const GithubButton = styled(ButtonLink)`
-  margin-top: 0;
-  height: 40px;
-  @media (min-width: ${(props) => props.theme.breakpoints.l}) {
-    display: none;
-  }
-`
-
-const ButtonContent = styled.div`
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-`
-
-const GithubIcon = styled(Icon)`
-  fill: ${(props) => props.theme.colors.text};
-  margin-right: 0.5rem;
-`
-
-const ModalTitle = styled.h2`
-  margin-top: 0;
-  margin-bottom: 0.5rem;
-`
-
-const ContributorList = styled.ul`
-  margin: 0;
-  margin-top: 1.5rem;
-  list-style-type: none;
-  overflow-y: scroll;
-  max-height: 16rem;
-`
-
-const Contributor = styled.li`
-  padding: 0.5rem;
-  display: flex;
-  align-items: center;
-  margin-bottom: 0;
-`
-
-const COMMIT_HISTORY = gql`
-  query CommitHistory($relativePath: String) {
-    repository(name: "ethereum-org-website", owner: "ethereum") {
-      ref(qualifiedName: "master") {
-        target {
-          ... on Commit {
-            id
-            history(path: $relativePath) {
-              edges {
-                node {
-                  author {
-                    name
-                    email
-                    avatarUrl(size: 100)
-                    user {
-                      login
-                      url
-                    }
-                  }
-                  committedDate
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-`
-
-interface Author {
-  name: string
-  email: string
-  avatarUrl: string
-  user: {
-    login: string
-    url: string
-  }
+type FlexProps = BaseHTMLAttributes<HTMLDivElement> & { asChild?: boolean }
+export type FileContributorsProps = FlexProps & {
+  contributors: FileContributor[]
+  lastEditLocaleTimestamp: string
 }
 
-interface Commit {
-  author: Author
-  committedDate: string
-}
-
-export interface IProps {
-  relativePath: string
-  className?: string
-  editPath?: string
-}
-
-const FileContributors: React.FC<IProps> = ({
-  relativePath,
-  className,
-  editPath,
-}) => {
+const FileContributors = ({
+  contributors,
+  lastEditLocaleTimestamp,
+  ...props
+}: FileContributorsProps) => {
   const [isModalOpen, setModalOpen] = useState(false)
-  const { language } = useI18next()
 
-  const { loading, error, data } = useQuery(COMMIT_HISTORY, {
-    variables: { relativePath },
-  })
+  const lastContributor: FileContributor = contributors.length
+    ? contributors[0]
+    : ({
+        avatar_url: "",
+        login: "",
+        html_url: "",
+        date: Date.now().toString(),
+      } as FileContributor)
 
-  if (error) return null
-
-  const commits: Array<Commit> =
-    data?.repository?.ref?.target?.history?.edges?.map((commit) => commit.node)
-
-  const lastCommit = commits?.[0] || {}
-  const lastContributor = lastCommit?.author || {}
-  const uniqueContributors =
-    commits?.reduce(
-      (res: Array<Author>, cur: Commit) => {
-        if (cur.author.user === null) {
-          return res
-        }
-        for (const contributor of res) {
-          const hasAuthorInfo = !!contributor.user && !!cur.author.user
-          if (
-            hasAuthorInfo &&
-            contributor.user.login === cur.author.user.login
-          ) {
-            return res
-          }
-        }
-        res.push(cur.author)
-        return res
-      },
-      [lastContributor]
-    ) || []
+  const modalSize = useBreakpointValue({ base: "xl", md: "md" } as const)
 
   return (
-    <div className={className}>
-      <Modal isOpen={isModalOpen} setIsOpen={setModalOpen}>
-        <ModalTitle>
-          <Translation id="contributors" />
-        </ModalTitle>
-        <div>
-          <Translation id="contributors-thanks" />
+    <>
+      <Modal
+        open={isModalOpen}
+        onOpenChange={(open) => setModalOpen(open)}
+        size={modalSize}
+        title={<Translation id="contributors" />}
+      >
+        <div className="space-y-4">
+          <p>
+            <Translation id="contributors-thanks" />
+          </p>
+          <ContributorList>
+            {contributors.map((contributor) => (
+              <Contributor contributor={contributor} key={contributor.login} />
+            ))}
+          </ContributorList>
         </div>
-        <ContributorList>
-          {uniqueContributors.map((contributor) => (
-            <Contributor key={contributor.email}>
-              <Avatar src={contributor.avatarUrl} alt={contributor.name} />
-              {contributor.user && (
-                <Link to={contributor.user.url}>@{contributor.user.login}</Link>
-              )}
-              {!contributor.user && <span>{contributor.name}</span>}
-            </Contributor>
-          ))}
-        </ContributorList>
       </Modal>
-      <Container>
-        <SkeletonContainer loading={!!loading}>
-          <SkeletonLeftContent>
-            <SkeletonAvatar />
-            <SkeletonInfo />
-          </SkeletonLeftContent>
-          <SkeletonButtonContainer />
-        </SkeletonContainer>
-        <LeftContent>
-          <Avatar src={lastContributor.avatarUrl} alt={lastContributor.name} />
-          <Info>
+
+      <Flex className="flex-col p-0 md:flex-row md:p-2" {...props}>
+        <Flex className="invisible me-4 flex-1 items-center md:visible md:flex">
+          <ContributorAvatar contributor={lastContributor} />
+
+          <p className="m-0 text-body-medium">
             <Translation id="last-edit" />:{" "}
-            {lastContributor.user && (
-              <Link to={lastContributor.user.url}>
-                @{lastContributor.user.login}
-              </Link>
-            )}
-            {!lastContributor.user && <span>{lastContributor.name}</span>},{" "}
-            {getLocaleTimestamp(language as Lang, lastCommit.committedDate)}
-          </Info>
-        </LeftContent>
-        <ButtonContainer>
-          <ContributorsButton
-            onClick={() => setModalOpen(true)}
-            loading={loading}
+            <InlineLink href={"https://github.com/" + lastContributor.login}>
+              @{lastContributor.login}
+            </InlineLink>
+            , {lastEditLocaleTimestamp}
+          </p>
+        </Flex>
+
+        <VStack className="items-stretch justify-between space-y-2">
+          <Button
+            className="md:w-inherit mb-4 w-full border-none bg-background md:mb-0"
+            variant="outline"
+            onClick={() => {
+              setModalOpen(true)
+              trackCustomEvent({
+                eventCategory: "see contributors",
+                eventAction: "click",
+                eventName: "click",
+              })
+            }}
           >
             <Translation id="see-contributors" />
-          </ContributorsButton>
-          {editPath && (
-            <GithubButton to={editPath} hideArrow variant="outline">
-              <ButtonContent>
-                <GithubIcon name="github" />
-                <span>
-                  <Translation id="edit-page" />
-                </span>
-              </ButtonContent>
-            </GithubButton>
-          )}
-        </ButtonContainer>
-      </Container>
-    </div>
+          </Button>
+        </VStack>
+      </Flex>
+    </>
   )
 }
 

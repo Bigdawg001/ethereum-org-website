@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from "react"
-import { MATOMO_LS_KEY } from "../utils/matomo"
-import { Checkbox, Flex, Text } from "@chakra-ui/react"
+import { useEffect, useState } from "react"
 
-export interface IProps {}
+import { MATOMO_LS_KEY } from "@/lib/utils/matomo"
 
-const MatomoOptOut: React.FC<IProps> = () => {
+import Checkbox from "./ui/checkbox"
+
+const MatomoOptOut = () => {
   const [loading, setLoading] = useState<boolean>(true)
   const [isOptedOut, setIsOptedOut] = useState<boolean>(false)
 
@@ -21,9 +21,7 @@ const MatomoOptOut: React.FC<IProps> = () => {
     setLoading(false)
   }, [])
 
-  const handleCheckbox = ({
-    target: { checked },
-  }: React.ChangeEvent<HTMLInputElement>): void => {
+  const handleCheckbox = (checked: boolean): void => {
     // Set local opt-out state based on check mark
     // Note: `checked` in the UI refers to being opted-in
     setIsOptedOut(!checked)
@@ -31,41 +29,31 @@ const MatomoOptOut: React.FC<IProps> = () => {
     localStorage.setItem(MATOMO_LS_KEY, String(!checked))
   }
   return (
-    <Flex
-      border="1px solid"
-      borderColor="border"
-      bgColor="background"
-      borderRadius="base"
-      p={6}
-      direction="column"
-      mb={4}
-      mt={8}
-      align="flex-start"
-      justify="space-between"
-    >
-      <Text color="fail">
+    <div className="mb-4 mt-8 flex flex-col rounded border border-body-light bg-background p-6">
+      <p className="mb-5 text-error">
         You can opt out of being tracked by Matomo Analytics and prevent the
         website from analysing the actions you take using the website. This will
         prevent us from learning from your actions and creating a better website
         experience for you and other users.
-      </Text>
+      </p>
       {loading ? (
         "Loading preferences..."
       ) : (
-        <Checkbox
-          type="checkbox"
-          id="matomo"
-          isChecked={!isOptedOut}
-          onChange={handleCheckbox}
-          mr={2}
-          size="md"
-        >
-          {isOptedOut
-            ? "You are opted out. Check this box to opt-in."
-            : "You are not opted out. Uncheck this box to opt-out."}
-        </Checkbox>
+        <div className="flex items-center">
+          <Checkbox
+            id="matomo"
+            checked={!isOptedOut}
+            onCheckedChange={handleCheckbox}
+            className="me-2"
+          />
+          <label htmlFor="matomo">
+            {isOptedOut
+              ? "You are opted out. Check this box to opt-in."
+              : "You are not opted out. Uncheck this box to opt-out."}
+          </label>
+        </div>
       )}
-    </Flex>
+    </div>
   )
 }
 

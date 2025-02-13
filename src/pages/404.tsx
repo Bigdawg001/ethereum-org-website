@@ -1,47 +1,53 @@
-import React from "react"
-import styled from "@emotion/styled"
-import { graphql, PageProps } from "gatsby"
+import type { GetStaticProps } from "next"
+import { serverSideTranslations } from "next-i18next/serverSideTranslations"
 
-import Link from "../components/Link"
-import Translation from "../components/Translation"
+import { BasePageProps, Lang } from "@/lib/types"
 
-import { Page, Content } from "../components/SharedStyledComponents"
+import InlineLink from "@/components/Link"
+import MainArticle from "@/components/MainArticle"
+import Translation from "@/components/Translation"
 
-const StyledPage = styled(Page)`
-  margin-top: 4rem;
-`
+import { existsNamespace } from "@/lib/utils/existsNamespace"
+import { getLastDeployDate } from "@/lib/utils/getLastDeployDate"
+import { getLocaleTimestamp } from "@/lib/utils/time"
+import { getRequiredNamespacesForPage } from "@/lib/utils/translations"
 
-const NotFoundPage = (props: PageProps) => (
-  <StyledPage>
-    <Content>
+export const getStaticProps = (async ({ locale }) => {
+  const requiredNamespaces = getRequiredNamespacesForPage("/")
+
+  // Want to check common namespace, so looking at requiredNamespaces[0]
+  const contentNotTranslated = !existsNamespace(locale!, requiredNamespaces[0])
+
+  const lastDeployDate = getLastDeployDate()
+  const lastDeployLocaleTimestamp = getLocaleTimestamp(
+    locale as Lang,
+    lastDeployDate
+  )
+
+  return {
+    props: {
+      ...(await serverSideTranslations(locale!, requiredNamespaces)),
+      contentNotTranslated,
+      lastDeployLocaleTimestamp,
+    },
+  }
+}) satisfies GetStaticProps<BasePageProps>
+
+const NotFoundPage = () => (
+  <div className="mx-auto mb-0 mt-16 flex w-full flex-col items-center">
+    <MainArticle className="my-8 w-full space-y-8 px-8 py-4">
       <h1>
         <Translation id="we-couldnt-find-that-page" />
       </h1>
       <p>
         <Translation id="try-using-search" />{" "}
-        <Link to="/">
+        <InlineLink href="/">
           <Translation id="return-home" />
-        </Link>
+        </InlineLink>
         .
       </p>
-    </Content>
-  </StyledPage>
+    </MainArticle>
+  </div>
 )
 
 export default NotFoundPage
-
-export const query = graphql`
-  query NotFoundPage($languagesToFetch: [String!]!) {
-    locales: allLocale(
-      filter: { language: { in: $languagesToFetch }, ns: { in: ["common"] } }
-    ) {
-      edges {
-        node {
-          ns
-          data
-          language
-        }
-      }
-    }
-  }
-`

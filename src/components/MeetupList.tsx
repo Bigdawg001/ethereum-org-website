@@ -1,24 +1,19 @@
-// Libraries
-import React, { useState } from "react"
-import { sortBy } from "lodash"
-import {
-  Box,
-  Flex,
-  Input,
-  LinkBox,
-  LinkOverlay,
-  Text,
-  useColorMode,
-} from "@chakra-ui/react"
+import { useState } from "react"
+import sortBy from "lodash/sortBy"
+import { FaChevronRight } from "react-icons/fa6"
 
-// Components
-import Emoji from "./Emoji"
-import InfoBanner from "./InfoBanner"
-import Link from "./Link"
-import Translation from "./Translation"
+import Emoji from "@/components/Emoji"
+import InfoBanner from "@/components/InfoBanner"
+import Translation from "@/components/Translation"
 
-// Data
-import meetups from "../data/community-meetups.json"
+import { cn } from "@/lib/utils/cn"
+import { trackCustomEvent } from "@/lib/utils/matomo"
+
+import meetups from "@/data/community-meetups.json"
+
+import { Flex } from "./ui/flex"
+import Input from "./ui/input"
+import InlineLink, { BaseLink } from "./ui/Link"
 
 export interface Meetup {
   title: string
@@ -30,122 +25,90 @@ export interface Meetup {
 const filterMeetups = (query: string): Array<Meetup> => {
   if (!query) return sortedMeetups
 
-  const lowercaseQuery = query.toLowerCase()
-
   return sortedMeetups.filter((meetup) => {
-    return (
-      meetup.title.toLowerCase().includes(lowercaseQuery) ||
-      meetup.location.toLowerCase().includes(lowercaseQuery)
-    )
+    const flag = meetup.emoji.replace(/[:_]/g, " ")
+    const searchable = [meetup.title, meetup.location, flag].join(" ")
+    return searchable.toLowerCase().includes(query.toLowerCase())
   })
 }
 
 // sort meetups by country and then by city
 const sortedMeetups: Array<Meetup> = sortBy(meetups, ["emoji", "location"])
 
-export interface IProps {}
-
 // TODO create generalized CardList / TableCard
 // TODO prop if ordered list or unordered
-const MeetupList: React.FC<IProps> = () => {
+const MeetupList = () => {
   const [searchField, setSearchField] = useState<string>("")
   const filteredMeetups = filterMeetups(searchField)
-  const { colorMode } = useColorMode()
 
-  const handleSearch = (event: React.ChangeEvent<HTMLInputElement>): void =>
+  const handleSearch = (event: React.ChangeEvent<HTMLInputElement>): void => {
     setSearchField(event.target.value)
+    trackCustomEvent({
+      eventCategory: "events search",
+      eventAction: "click",
+      eventName: event.target.value,
+    })
+  }
 
   return (
-    <Box>
+    <div>
       <Input
+        className="mb-6 w-full"
         onChange={handleSearch}
         placeholder={"Search by meetup title or location"}
-        display="block"
-        mr="auto"
-        ml="auto"
-        mb={6}
-        border="1px solid"
-        borderColor="searchBorder"
-        color="text"
-        bg="searchBackground"
-        p={2}
-        borderRadius="base"
-        w="100%"
-        _focus={{ outline: "auto 1px" }}
-        _placeholder={{ color: "text200" }}
+        aria-describedby="input-instruction"
       />
-      <Box
-        boxShadow={colorMode === "dark" ? "tableBox.dark" : "tableBox.light"}
+      {/* hidden for attachment to input only */}
+      <span id="input-instruction" className="sr-only">
+        results update as you type
+      </span>
+      <ul
+        className="m-0 border-2 border-body-light"
+        aria-label="Event meetup results"
       >
-        {filteredMeetups.length ? (
-          filteredMeetups.map((meetup, idx) => (
-            <LinkBox
-              key={idx}
-              display="flex"
-              justifyContent="space-between"
-              boxShadow={
-                colorMode === "dark"
-                  ? "tableItemBox.dark"
-                  : "tableItemBox.light"
-              }
-              mb={0.25}
-              p={4}
-              w="100%"
-              _hover={{
-                textDecoration: "none",
-                borderRadius: "base",
-                boxShadow: "0 0 1px primary",
-                bg: "tableBackgroundHover",
-              }}
-            >
-              <Flex flex="1 1 75%" mr={4}>
-                <Box mr={4} opacity="0.4">
-                  {idx + 1}
-                </Box>
-                <Box>
-                  <LinkOverlay
-                    as={Link}
-                    href={meetup.link}
-                    textDecor="none"
-                    color="text"
-                    hideArrow
-                  >
-                    {meetup.title}
-                  </LinkOverlay>
-                </Box>
-              </Flex>
-              <Flex
-                textAlign="right"
-                alignContent="flex-start"
-                flex="1 1 25%"
-                mr={4}
-                flexWrap="wrap"
-              >
-                <Emoji text={meetup.emoji} boxSize={4} mr={2} />
-                <Text mb={0} opacity={"0.6"}>
-                  {meetup.location}
-                </Text>
-              </Flex>
-              <Box
-                as="span"
-                _after={{
-                  content: '"↗"',
-                  ml: 0.5,
-                  mr: 1.5,
-                }}
-              ></Box>
-            </LinkBox>
-          ))
-        ) : (
+        {filteredMeetups.map((meetup, idx) => (
+          <BaseLink
+            href={meetup.link}
+            hideArrow
+            className={cn(
+              "group mb-[0.25px] flex w-full justify-between p-4 text-current no-underline",
+              "hover:bg-background-highlight hover:text-current hover:no-underline hover:shadow-[0_0_1px] hover:shadow-primary",
+              "border-b-2 border-body-light"
+            )}
+            key={idx}
+          >
+            <Flex className="me-4 flex-[1_1_75%]">
+              <div className="me-4 opacity-40">{idx + 1}</div>
+              <div>
+                <p className="no-underline group-hover:text-primary-hover group-hover:underline">
+                  {meetup.title}
+                </p>
+              </div>
+            </Flex>
+            <Flex className="me-4 flex-[1_1_25%] flex-wrap content-start items-center text-end">
+              <Emoji
+                text={meetup.emoji}
+                className="me-2 text-md leading-none"
+              />
+              <p className="mb-0 opacity-60">{meetup.location}</p>
+            </Flex>
+            <Flex className="items-center">
+              <FaChevronRight className="h-[14px] w-[14px] xl:h-[18px] xl:w-[18px]" />
+            </Flex>
+          </BaseLink>
+        ))}
+      </ul>
+      <div aria-live="assertive" aria-atomic>
+        {!filteredMeetups.length && (
           <InfoBanner emoji=":information_source:">
-            <Translation id="page-community-meetuplist-no-meetups" />{" "}
-            <Link to="https://github.com/ethereum/ethereum-org-website/blob/dev/src/data/community-meetups.json">
-              <Translation id="page-community-please-add-to-page" />
-            </Link>
+            <Translation id="page-community:page-community-meetuplist-no-meetups" />{" "}
+            <InlineLink href="https://github.com/ethereum/ethereum-org-website/blob/dev/src/data/community-meetups.json">
+              <Translation id="page-community:page-community-please-add-to-page" />
+            </InlineLink>
           </InfoBanner>
         )}
-      </Box>
-    </Box>
+      </div>
+    </div>
   )
 }
 

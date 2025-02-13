@@ -1,95 +1,67 @@
-import React, { ReactNode } from "react"
-import { GatsbyImage, IGatsbyImageData } from "gatsby-plugin-image"
-import { useQuery, gql } from "@apollo/client"
-import {
-  Badge,
-  Box,
-  Center,
-  Flex,
-  Heading,
-  HStack,
-  Img,
-  Text,
-  TextProps,
-} from "@chakra-ui/react"
+import type { ImageProps } from "next/image"
+import { useTranslation } from "next-i18next"
+import type { ReactNode } from "react"
 
+import { cn } from "@/lib/utils/cn"
+
+import { ButtonLink } from "./ui/buttons/Button"
+import { Center, Flex, HStack } from "./ui/flex"
+import { Tag } from "./ui/tag"
 import GitStars from "./GitStars"
-import ButtonLink from "./ButtonLink"
+import { TwImage } from "./Image"
 
-const REPO_DATA = gql`
-  query RepoData(
-    $repoOwner: String!
-    $repoName: String!
-    $repoLangCount: Int!
-  ) {
-    repository(owner: $repoOwner, name: $repoName) {
-      stargazerCount
-      languages(
-        orderBy: { field: SIZE, direction: DESC }
-        first: $repoLangCount
-      ) {
-        nodes {
-          name
-        }
-      }
-      url
-    }
-  }
-`
-
-const SubjectBadge: React.FC<{
+type SubjectBadgeProps = {
   subject: string
-  children: React.ReactNode
-}> = ({ subject, children }) => {
+  children: ReactNode
+}
+
+const SubjectBadge = ({ subject, children }: SubjectBadgeProps) => {
   const backgroundProp = () => {
     switch (subject) {
       case "Solidity":
-        return "tagYellow"
+        return "warning"
       case "Vyper":
-        return "tagBlue"
+        return "tag"
       case "web3":
-        return "tagTurquoise"
+        return "success"
       case "JavaScript":
-        return "tagRed"
+        return "error"
       case "TypeScript":
-        return "tagBlue"
+        return "tag"
       case "Go":
-        return "tagTurquoise"
+        return "tag"
       case "Python":
-        return "tagMint"
+        return "error"
       case "Rust":
-        return "tagOrange"
+        return "warning"
       case "C#":
-        return "tagBlue"
+        return "tag"
       case "Java":
-        return "tagPink"
+        return "error"
       default:
-        return "tagGray"
+        return "normal"
     }
   }
-  return (
-    <Badge size="sm" textTransform="unset" background={backgroundProp()}>
-      {children}
-    </Badge>
-  )
+  return <Tag status={backgroundProp()}>{children}</Tag>
 }
 
-export interface IProps {
-  children?: React.ReactNode
+export type ProductCardProps = {
+  children?: ReactNode
   url: string
   background: string
-  image: IGatsbyImageData | string
+  image: ImageProps["src"]
   name: string
   description?: ReactNode
   note?: string
   alt?: string
   githubUrl?: string
-  repoLangCount?: number
   subjects?: Array<string>
+  githubRepoStars?: number
+  githubRepoLanguages?: Array<string>
   hideStars?: boolean
 }
 
-const ProductCard: React.FC<IProps> = ({
+const ProductCard = ({
   url,
   background: bgProp,
   image,
@@ -99,106 +71,63 @@ const ProductCard: React.FC<IProps> = ({
   alt = "",
   children,
   githubUrl = "",
-  repoLangCount = 1,
   subjects,
+  githubRepoStars = 0,
+  githubRepoLanguages = [],
   hideStars = false,
-}) => {
-  const split = githubUrl.split("/")
-  const repoOwner = split[split.length - 2]
-  const repoName = split[split.length - 1]
-
-  // TODO add loading state
-  const { error, data } = useQuery(REPO_DATA, {
-    variables: {
-      repoOwner,
-      repoName,
-      repoLangCount,
-    },
-    skip: !githubUrl,
-  })
-
-  const hasRepoData = data && data.repository && !error
-
-  const isImgSrc = typeof image === "string"
-
-  const DESCRIPTION_STYLES: TextProps = {
-    opacity: 0.8,
-    fontSize: "sm",
-    mb: 2,
-    lineHeight: "140%",
-  }
+}: ProductCardProps) => {
+  const { t } = useTranslation("common")
 
   return (
     <Flex
-      flexDirection="column"
-      justifyContent="space-between"
-      color="text"
-      background="searchBackground"
-      boxShadow="0px 14px 66px rgba(0, 0, 0, 0.07)"
-      borderRadius="base"
-      border="1px"
-      borderColor="lightBorder"
-      textDecoration="none"
-      _hover={{
-        transition: "transform 0.1s",
-        transform: "scale(1.02)",
-      }}
+      className={cn(
+        "flex-col justify-between bg-background-highlight",
+        "rounded-base border no-underline",
+        "hover:scale-[1.02] hover:transition-transform"
+      )}
     >
-      <Center
-        background={bgProp}
-        boxShadow="inset 0px -1px 0px rgba(0, 0, 0, 0.1)"
-        minH="200px"
-      >
-        {isImgSrc ? (
-          <img src={image} alt={alt} />
-        ) : (
-          <Img
-            as={GatsbyImage}
-            image={image}
-            alt={alt}
-            objectFit="contain"
-            width="100%"
-            alignSelf="center"
-            maxW={{ base: "311px", sm: "372px" }}
-            maxH="257px"
+      <Center className="min-h-[200px]" style={{ backgroundColor: bgProp }}>
+        <TwImage src={image} alt={alt} height="100" className="self-center" />
+      </Center>
+      <Flex className="h-full flex-col p-6 text-left">
+        {githubRepoStars > 0 && (
+          <GitStars
+            gitHubRepo={{ url: githubUrl, stargazerCount: githubRepoStars }}
+            hideStars={hideStars}
           />
         )}
-      </Center>
-      <Flex flexDirection="column" p={6} textAlign="left" height="100%">
-        {hasRepoData && (
-          <GitStars gitHubRepo={data.repository} hideStars={hideStars} />
-        )}
-        <Heading
-          as="h3"
-          fontSize="2xl"
-          fontWeight={600}
-          mt={!hasRepoData ? 8 : 12}
-          mb={3}
+        <h3
+          className={cn(
+            "mb-3 text-2xl font-semibold",
+            githubRepoStars > 0 ? "mt-8" : "mt-12"
+          )}
         >
           {name}
-        </Heading>
-        {description && <Text {...DESCRIPTION_STYLES}>{description}</Text>}
-        {note.length > 0 && <Text {...DESCRIPTION_STYLES}>Note: {note}</Text>}
-        {children && <Box mt={4}>{children}</Box>}
+        </h3>
+        {description && (
+          <p className="mb-2 text-sm leading-xs opacity-80">{description}</p>
+        )}
+        {note.length > 0 && (
+          <p className="mb-2 text-sm leading-xs opacity-80">Note: {note}</p>
+        )}
+        {children && <div className="mt-4">{children}</div>}
       </Flex>
-      <HStack mt={5} mb={2} px={6} spacing={3}>
+      <HStack className="mb-2 mt-5 gap-3 px-6">
         {subjects &&
           subjects.map((subject, idx) => (
             <SubjectBadge key={idx} subject={subject}>
               {subject}
             </SubjectBadge>
           ))}
-        {hasRepoData &&
-          data.repository.languages.nodes.map(
-            ({ name }: { name: string }, idx: number) => (
-              <SubjectBadge key={idx} subject={name}>
-                {name.toUpperCase()}
-              </SubjectBadge>
-            )
-          )}
+        {githubRepoLanguages.length > 0 &&
+          githubRepoLanguages.map((name, idx: number) => (
+            <SubjectBadge key={idx} subject={name}>
+              {name.toUpperCase()}
+            </SubjectBadge>
+          ))}
       </HStack>
-      <ButtonLink to={url} m={4} height={20}>
-        Open {name}
+      <ButtonLink href={url} className="m-4 h-20">
+        {t("open")} {name}
       </ButtonLink>
     </Flex>
   )

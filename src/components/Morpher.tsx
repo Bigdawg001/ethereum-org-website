@@ -1,5 +1,13 @@
-import React, { useState, useEffect } from "react"
-import Link from "./Link"
+import { useEffect, useState } from "react"
+import { useMediaQuery } from "usehooks-ts"
+
+import { Button } from "@/components/ui/buttons/Button"
+
+import {
+  DESKTOP_LANGUAGE_BUTTON_NAME,
+  HAMBURGER_BUTTON_ID,
+  MOBILE_LANGUAGE_BUTTON_NAME,
+} from "@/lib/constants"
 
 const Morpher = () => {
   const [state, setState] = useState({
@@ -28,29 +36,7 @@ const Morpher = () => {
   // loops over chars to morph a text to another
   const morpher = (start: string, end: string): void => {
     // array of chars to randomly morph the text between start and end
-    const chars = [
-      "a",
-      "b",
-      "c",
-      "d",
-      "x",
-      "y",
-      "z",
-      "0",
-      "1",
-      "2",
-      "3",
-      "4",
-      "5",
-      "6",
-      "7",
-      "{",
-      "}",
-      "%",
-      "$",
-      "?",
-      "!",
-    ]
+    const chars = "abcdxyz01234567{}%$?!".split("")
     // duration of the global morph
     const duration = 3
     // speed of the morph for each letter
@@ -68,7 +54,7 @@ const Morpher = () => {
     let count = 0
     let spentTime = 0
     // splitTime  = milliseconds / letters
-    let splitTime = (duration * 70) / Math.max(slen, rlen)
+    const splitTime = (duration * 70) / Math.max(slen, rlen)
 
     function update() {
       // Update present date and spent time
@@ -139,16 +125,40 @@ const Morpher = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  const isLarge = useMediaQuery("(min-width: 48rem)") // TW md breakpoint, 768px
+
+  const handleMobileClick = () => {
+    if (!document) return
+    ;(document.getElementById(HAMBURGER_BUTTON_ID) as HTMLButtonElement).click()
+    setTimeout(
+      () =>
+        (
+          document.querySelector(
+            `button[name="${MOBILE_LANGUAGE_BUTTON_NAME}"`
+          ) as HTMLButtonElement
+        ).click(),
+      1
+    )
+  }
+  const handleDesktopClick = () => {
+    if (!document) return
+    ;(
+      document.querySelector(
+        `button[name="${DESKTOP_LANGUAGE_BUTTON_NAME}"`
+      ) as HTMLButtonElement
+    ).click()
+  }
+
   return (
-    <Link
-      textDecor="none"
-      fontSize="md"
-      color="text"
-      _hover={{ color: "primary" }}
-      to="/languages/"
-    >
-      <span>{state.text}</span>
-    </Link>
+    <>
+      <Button
+        className="mx-auto w-fit text-md text-primary no-underline"
+        onClick={isLarge ? handleDesktopClick : handleMobileClick}
+        variant="ghost"
+      >
+        {state.text}
+      </Button>
+    </>
   )
 }
 

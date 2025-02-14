@@ -1,76 +1,58 @@
-import {
-  useDisclosure,
-  chakra,
-  Box,
-  Fade,
-  Flex,
-  Icon,
-  List,
-  Show,
-} from "@chakra-ui/react"
 import React from "react"
+import { useTranslation } from "next-i18next"
 import { MdExpandMore } from "react-icons/md"
-import Translation from "../Translation"
-import ItemsList from "./ItemsList"
-import { Item, outerListProps } from "./utils"
 
-export interface IPropsTableOfContentsMobile {
-  items?: Array<Item>
+import type { ToCItem } from "@/lib/types"
+
+import { Button } from "../ui/buttons/Button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu"
+
+import ItemsListMobile from "./ItemsListMobile"
+
+export type TableOfContentsMobileProps = {
+  items?: Array<ToCItem>
   maxDepth?: number
 }
 
-const Mobile: React.FC<IPropsTableOfContentsMobile> = ({ items, maxDepth }) => {
-  const { getButtonProps, getDisclosureProps, isOpen } = useDisclosure({
-    defaultIsOpen: false,
-  })
+const Mobile = ({ items, maxDepth }: TableOfContentsMobileProps) => {
+  const { t } = useTranslation("common")
+
   if (!items) {
     return null
   }
 
   return (
-    <Show below="l">
-      {/* TODO: switch `l` to `lg` after UI migration and use `hideBelow` prop */}
-      <Box
-        as="aside"
-        background="background"
-        border="1px"
-        borderColor="border"
-        borderRadius="4px"
-        py={2}
-        px={4}
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          isSecondary
+          variant="outline"
+          className="flex w-full justify-between lg:hidden"
+        >
+          <span className="flex-1 text-center">{t("on-this-page")}</span>
+          <MdExpandMore />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        align="start"
+        sideOffset={8}
+        className="w-[var(--radix-dropdown-menu-trigger-width)]"
+        // prevents focus from moving to the trigger after closing
+        onCloseAutoFocus={(e) => {
+          e.preventDefault()
+        }}
       >
-        <Flex
-          color="text200"
-          cursor="pointer"
-          alignItems="center"
-          justify="space-between"
-          {...getButtonProps()}
-        >
-          <chakra.span flex={1} fontWeight={500}>
-            <Translation id="on-this-page" />
-          </chakra.span>
-          <Icon
-            as={MdExpandMore}
-            transform={isOpen ? "rotate(0)" : "rotate(-90deg)"}
-            boxSize={6}
-            transition="transform .4s"
-          />
-        </Flex>
-        <Fade
-          in={isOpen}
-          {...getDisclosureProps()}
-          transition={{ enter: { duration: 0.6 } }}
-        >
-          <List {...outerListProps}>
-            <ItemsList
-              items={items}
-              depth={0}
-              maxDepth={maxDepth ? maxDepth : 1}
-            />
-          </List>
-        </Fade>
-      </Box>
-    </Show>
+        <ItemsListMobile
+          items={items}
+          depth={0}
+          maxDepth={maxDepth ? maxDepth : 1}
+        />
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
 

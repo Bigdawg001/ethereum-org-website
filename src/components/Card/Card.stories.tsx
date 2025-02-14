@@ -1,13 +1,14 @@
 import { Box } from "@chakra-ui/react"
-import { Meta, StoryFn } from "@storybook/react"
-import React from "react"
-import Card, { IProps } from "."
-import Button from "../Button"
+import { Meta, type StoryObj } from "@storybook/react"
 
-const Component = Card
+import { Button } from "@/components/Buttons"
 
-export default {
-  component: Card,
+import { getTranslation } from "@/storybook-utils"
+
+import CardComponent, { CardProps } from "."
+
+const meta = {
+  component: CardComponent,
   decorators: [
     (Story) => (
       <Box maxW="342px" margin="0 auto">
@@ -15,16 +16,29 @@ export default {
       </Box>
     ),
   ],
-} as Meta<typeof Component>
+} satisfies Meta<typeof CardComponent>
 
-const defaultProps: IProps = {
-  emoji: ":woman_student:",
-  title: "Learn Ethereum development",
-  description: "Read up on core concepts and the Ethereum stack with our docs",
+export default meta
+
+const DEVELOPS_INDEX_NS = "page-developers-index"
+
+export const Card: StoryObj<typeof meta> = {
+  render: (args) => {
+    const defaultProps: CardProps = {
+      emoji: ":woman_student:",
+      title: getTranslation("page-developers-learn", DEVELOPS_INDEX_NS),
+      description: getTranslation(
+        "page-developers-learn-desc",
+        DEVELOPS_INDEX_NS
+      ),
+    }
+
+    return (
+      <CardComponent {...defaultProps} {...args}>
+        <Button>
+          {getTranslation("page-developers-read-docs", DEVELOPS_INDEX_NS)}
+        </Button>
+      </CardComponent>
+    )
+  },
 }
-
-export const Default: StoryFn<typeof Component> = (args) => (
-  <Component {...defaultProps} {...args}>
-    <Button>Read the docs</Button>
-  </Component>
-)

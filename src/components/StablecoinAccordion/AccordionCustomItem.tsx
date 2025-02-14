@@ -1,37 +1,47 @@
-import React, { ReactNode } from "react"
-import {
-  AccordionButton,
-  AccordionItem,
-  AccordionPanel,
-  Box,
-  BoxProps,
-  Flex,
-  Heading,
-  Text,
-} from "@chakra-ui/react"
+import { BaseHTMLAttributes, ReactNode, useState } from "react"
+import { useTranslation } from "next-i18next"
+
+import type { ChildOnlyProp } from "@/lib/types"
+
+import { Flex } from "@/components/ui/flex"
+import { Tag, TagProps } from "@/components/ui/tag"
+
 import Emoji from "../Emoji"
-import Pill from "../Pill"
-import Translation from "../Translation"
-import { ChildOnlyType } from "."
+import {
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "../ui/accordion"
+
 import { accordionButtonContent, CategoryNameType } from "./utils"
 
-export const LeftColumnPanel = (props: ChildOnlyType & Partial<BoxProps>) => (
-  <Box flex="0 0 50%" maxW={{ lg: "75%" }} mr={{ lg: 16 }} {...props} />
+type LeftColumnPanelElement = BaseHTMLAttributes<HTMLDivElement>
+
+export const LeftColumnPanel = (
+  props: ChildOnlyProp & LeftColumnPanelElement
+) => (
+  <div
+    className="flex-shrink-0 flex-grow-0 basis-1/2 lg:me-16 lg:max-w-[75%]"
+    {...props}
+  />
 )
 
-export const RightColumnPanel = (props: ChildOnlyType) => (
-  <LeftColumnPanel mr={0} flex="0 1 50%" mt={{ base: 12, lg: 0 }} {...props} />
+export const RightColumnPanel = (props: ChildOnlyProp) => (
+  <LeftColumnPanel
+    className="me-0 mt-12 flex-shrink flex-grow-0 basis-1/2 lg:mt-0"
+    {...props}
+  />
 )
 
 const MoreOrLessLink = ({ isOpen }: { isOpen: boolean }) => {
+  const { t } = useTranslation("page-stablecoins")
+
   return (
-    <Box mr={6} color="primary">
-      {isOpen ? (
-        <Translation id="page-stablecoins-accordion-less" />
-      ) : (
-        <Translation id="page-stablecoins-accordion-more" />
-      )}
-    </Box>
+    <div className="me-6 text-md text-primary">
+      {isOpen
+        ? t("page-stablecoins-accordion-less")
+        : t("page-stablecoins-accordion-more")}
+    </div>
   )
 }
 
@@ -45,73 +55,54 @@ interface AccordionCustomItemProps {
 
 export const AccordionCustomItem = (props: AccordionCustomItemProps) => {
   const { category, children } = props
+  const { t } = useTranslation("page-stablecoins")
+  const [open, setOpen] = useState(false)
+
+  const handleOpen = () => setOpen(!open)
 
   const contentObj = accordionButtonContent[category]
 
   return (
-    <AccordionItem border="1px" borderColor="border !important">
-      {({ isExpanded }) => (
-        <>
-          <AccordionButton
-            justifyContent="space-between"
-            alignItems="center"
-            p={0}
-            _hover={{ background: "ednBackground" }}
-          >
-            <Flex
-              alignItems={{ base: "flex-start", lg: "center" }}
-              flexDirection={{ base: "column", md: "row" }}
-              m={6}
-              me={4}
-              {...props}
-            >
-              <Emoji
-                text={contentObj.emoji}
-                me={6}
-                mb={{ base: 2, md: 0 }}
-                fontSize={{ base: "3rem", md: "4rem" }}
-              />
-              <Box>
-                <Flex alignItems="center" mb={2}>
-                  <Heading
-                    as="h3"
-                    fontSize={{ base: "1.25rem", md: "1.5rem" }}
-                    lineHeight={1.4}
-                    my={0}
-                  >
-                    <Translation id={contentObj.title} />
-                  </Heading>
-                  {!!contentObj.pill && (
-                    <Pill ml={4} background={contentObj.pill.color}>
-                      <Translation id={contentObj.pill.name} />
-                    </Pill>
-                  )}
-                </Flex>
-                <Text color="text200" mb={0} textAlign="start">
-                  <Translation id={contentObj.textPreview} />
-                </Text>
-              </Box>
+    <AccordionItem value={contentObj.title} className="border">
+      <AccordionTrigger
+        hideIcon
+        className="items-center justify-between px-0 py-0 text-body-medium hover:text-body-medium md:px-0"
+        onClick={handleOpen}
+      >
+        <Flex
+          className="lg:center m-6 me-4 flex-col items-start md:flex-row"
+          {...props}
+        >
+          <Emoji
+            text={contentObj.emoji}
+            className="mb-2 me-6 text-5xl md:mb-0 md:text-6xl"
+          />
+          <div>
+            <Flex className="mb-2 items-center">
+              <h3 className="text-xl text-body hover:text-body md:text-2xl">
+                {t(contentObj.title)}
+              </h3>
+              {!!contentObj.tag && (
+                <Tag
+                  status={contentObj.tag.status as TagProps["status"]}
+                  className="ms-4"
+                >
+                  {t(contentObj.tag.name)}
+                </Tag>
+              )}
             </Flex>
-            <MoreOrLessLink isOpen={isExpanded} />
-          </AccordionButton>
-          <AccordionPanel
-            background="ednBackground"
-            border="1px"
-            borderColor="border"
-            mb="-1px"
-            mx="-1px"
-            p={0}
-          >
-            <Flex
-              p={8}
-              justifyContent="space-between"
-              flexDirection={{ base: "column", lg: "row" }}
-            >
-              {children}
-            </Flex>
-          </AccordionPanel>
-        </>
-      )}
+            <p className="text-start text-md text-body-medium">
+              {t(contentObj.textPreview)}
+            </p>
+          </div>
+        </Flex>
+        <MoreOrLessLink isOpen={open} />
+      </AccordionTrigger>
+      <AccordionContent className="-mx-px -mb-px mt-0 border border-border bg-background p-0 text-md md:p-0">
+        <Flex className="flex-col justify-between p-8 lg:flex-row">
+          {children}
+        </Flex>
+      </AccordionContent>
     </AccordionItem>
   )
 }

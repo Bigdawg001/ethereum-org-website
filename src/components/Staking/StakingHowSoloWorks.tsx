@@ -1,56 +1,39 @@
-import React from "react"
-import { graphql, useStaticQuery } from "gatsby"
-import { GatsbyImage } from "gatsby-plugin-image"
+/* eslint-disable react/jsx-key */
+import { TwImage } from "@/components/Image"
+import Translation from "@/components/Translation"
+import { Center } from "@/components/ui/flex"
 
-import OrderedList from "../OrderedList"
-import Translation from "../Translation"
+import { ListItem, OrderedList } from "../ui/list"
 
-import { getImage } from "../../utils/image"
-import { Center, Image } from "@chakra-ui/react"
+import image from "@/public/images/hackathon_transparent.png"
 
-export interface IProps {}
-
-const StakingHowSoloWorks: React.FC<IProps> = () => {
-  const { image } = useStaticQuery(graphql`
-    {
-      image: file(relativePath: { eq: "hackathon_transparent.png" }) {
-        childImageSharp {
-          gatsbyImageData(
-            width: 400
-            layout: CONSTRAINED
-            placeholder: BLURRED
-            quality: 100
-          )
-        }
-      }
-    }
-  `)
-
+const StakingHowSoloWorks = () => {
   const items = [
     <p>
-      <Translation id="page-staking-how-solo-works-item-1" />
+      <Translation id="page-staking:page-staking-how-solo-works-item-1" />
     </p>,
     <p>
-      <Translation id="page-staking-how-solo-works-item-2" />
+      <Translation id="page-staking:page-staking-how-solo-works-item-2" />
     </p>,
     <p>
-      <Translation id="page-staking-how-solo-works-item-3" />
+      <Translation id="page-staking:page-staking-how-solo-works-item-3" />
     </p>,
     <p>
-      <Translation id="page-staking-how-solo-works-item-4" />
+      <Translation id="page-staking:page-staking-how-solo-works-item-4" />
     </p>,
     <p>
-      <Translation id="page-staking-how-solo-works-item-5" />
+      <Translation id="page-staking:page-staking-how-solo-works-item-5" />
     </p>,
   ]
 
   return (
-    <Center
-      flexDirection={{ base: "column", md: "row" }}
-      justifyContent="space-between"
-    >
-      <OrderedList listData={items} />
-      <Image as={GatsbyImage} image={getImage(image)!} alt="" />
+    <Center className="flex-col justify-between md:flex-row">
+      <OrderedList>
+        {items.map((item, index) => (
+          <ListItem key={index}>{item}</ListItem>
+        ))}
+      </OrderedList>
+      <TwImage src={image} alt="" width={400} />
     </Center>
   )
 }

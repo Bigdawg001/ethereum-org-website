@@ -1,69 +1,38 @@
-import React, { useState } from "react"
-import styled from "@emotion/styled"
-import { useTranslation } from "gatsby-plugin-react-i18next"
+import { useState } from "react"
+import { useTranslation } from "next-i18next"
+import { FaTools } from "react-icons/fa"
 
-import { StyledSelect as Select } from "../SharedStyledComponents"
-import ButtonLink from "../ButtonLink"
-import Emoji from "../OldEmoji"
-import Translation from "../Translation"
+import Translation from "@/components/Translation"
+import { ButtonLink } from "@/components/ui/buttons/Button"
+import { Flex } from "@/components/ui/flex"
 
-import { trackCustomEvent } from "../../utils/matomo"
+import { cn } from "@/lib/utils/cn"
+import { trackCustomEvent } from "@/lib/utils/matomo"
 
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-  background: ${({ theme }) => theme.colors.layer2Gradient};
-  border-radius: 0.25rem;
-  padding: 2rem;
-  @media (max-width: ${(props) => props.theme.breakpoints.m}) {
-    padding: 1.5rem;
-  }
-  span {
-    color: ${({ theme }) => theme.colors.text200};
-  }
-`
+import Select, { type SelectOnChange } from "../Select"
 
-const SelectContainer = styled.div`
-  margin: 1rem 0;
-`
+type StakingDataOption = { label: string; value: string }
 
-const StyledSelect = styled(Select)`
-  max-width: 50%;
-  @media (max-width: ${({ theme }) => theme.breakpoints.m}) {
-    max-width: 100%;
-  }
-`
-
-const ButtonContainer = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  @media (max-width: ${(props) => props.theme.breakpoints.m}) {
-    a {
-      width: 100%;
-    }
-  }
-`
-export interface IProps {}
-
-const StakingLaunchpadWidget: React.FC<IProps> = () => {
-  const { t } = useTranslation()
+const StakingLaunchpadWidget = () => {
+  const { t } = useTranslation("page-staking")
   const [selection, setSelection] = useState("testnet")
 
-  const handleChange = (e) => {
+  const handleChange: SelectOnChange<StakingDataOption> = (data) => {
+    if (!data) return
+
     trackCustomEvent({
       eventCategory: `Selected testnet vs mainnet for Launchpad link`,
       eventAction: `Clicked`,
-      eventName: `${e.label} bridge selected`,
-      eventValue: `${e.value}`,
+      eventName: `${data.label} bridge selected`,
+      eventValue: `${data.value}`,
     })
-    setSelection(e.value)
+    setSelection(data.value)
   }
 
   const data = {
     testnet: {
-      label: "Goerli testnet",
-      url: "https://goerli.launchpad.ethereum.org",
+      label: `Holesky ${t("testnet")}`,
+      url: "https://holesky.launchpad.ethereum.org",
     },
     mainnet: {
       label: "Mainnet",
@@ -71,50 +40,57 @@ const StakingLaunchpadWidget: React.FC<IProps> = () => {
     },
   }
 
-  const selectOptions = Object.keys(data).map((key) => ({
+  const selectOptions = Object.keys(data).map<StakingDataOption>((key) => ({
     label: data[key].label,
     value: key,
   }))
 
   return (
-    <Container>
-      <div>
-        <span>
-          <Translation id="page-staking-launchpad-widget-span" />
-        </span>
-        <SelectContainer>
-          <StyledSelect
-            className="react-select-container"
-            classNamePrefix="react-select"
-            options={selectOptions}
-            onChange={handleChange}
-            defaultValue={selectOptions[0]}
-          />
-        </SelectContainer>
-        <p>
-          <Translation id="page-staking-launchpad-widget-p1" />
-        </p>
-        <p>
-          <Translation id="page-staking-launchpad-widget-p2" />
-        </p>
-        <ButtonContainer style={{ marginBottom: "1rem" }}>
-          <ButtonLink to={data[selection].url}>
-            {selection === "mainnet"
-              ? t("page-staking-launchpad-widget-mainnet-start")
-              : t("page-staking-launchpad-widget-testnet-start")}
-          </ButtonLink>
-        </ButtonContainer>
-        <p>
-          <Translation id="page-staking-launchpad-widget-p3" />
-        </p>
-        <ButtonContainer>
-          <ButtonLink to="#node-and-client-tools" variant="outline">
-            <Emoji text="🛠" mr="1rem" />
-            <Translation id="page-staking-launchpad-widget-link" />
-          </ButtonLink>
-        </ButtonContainer>
+    <Flex
+      className={cn(
+        "flex-col rounded p-6 md:p-8",
+        "bg-gradient-to-r from-accent-a/10 to-accent-c/10 dark:from-accent-a/20 dark:to-accent-c-hover/20"
+      )}
+    >
+      <span className="leading-6 text-body-medium">
+        <Translation id="page-staking:page-staking-launchpad-widget-span" />
+      </span>
+      <div className="my-4 md:max-w-[50%]">
+        <Select
+          instanceId="staking-launchpad-select"
+          options={selectOptions}
+          onChange={handleChange}
+          defaultValue={selectOptions[0]}
+          variant="outline"
+        />
       </div>
-    </Container>
+      <p className="mb-6 leading-6">
+        <Translation id="page-staking:page-staking-launchpad-widget-p1" />
+      </p>
+      <p className="mb-6 leading-6">
+        <Translation id="page-staking:page-staking-launchpad-widget-p2" />
+      </p>
+      <div className="mb-4">
+        <ButtonLink href={data[selection].url} className="w-full md:w-auto">
+          {selection === "mainnet"
+            ? t("page-staking:page-staking-launchpad-widget-mainnet-start")
+            : t("page-staking:page-staking-launchpad-widget-testnet-start")}
+        </ButtonLink>
+      </div>
+      <p className="mb-6 leading-6">
+        <Translation id="page-staking:page-staking-launchpad-widget-p3" />
+      </p>
+      <div>
+        <ButtonLink
+          href="#node-and-client-tools"
+          variant="outline"
+          className="w-full md:w-auto"
+        >
+          <FaTools />{" "}
+          <Translation id="page-staking:page-staking-launchpad-widget-link" />
+        </ButtonLink>
+      </div>
+    </Flex>
   )
 }
 

@@ -1,69 +1,45 @@
-import React from "react"
-import {
-  Box,
-  Avatar,
-  Flex,
-  LinkOverlay,
-  LinkBox,
-  useColorModeValue,
-  VisuallyHidden,
-  List,
-  ListItem,
-} from "@chakra-ui/react"
-import { useTranslation } from "gatsby-plugin-react-i18next"
+import { useTranslation } from "next-i18next"
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
 
-import Emoji from "./Emoji"
-import Link from "./Link"
-import Translation from "./Translation"
+import Emoji from "@/components/Emoji"
 
-const githubUrl = `https://github.com/`
+import { GITHUB_URL } from "@/lib/constants"
 
-export interface Person {
+import { Avatar } from "./ui/avatar"
+import { Flex } from "./ui/flex"
+import { LinkBox } from "./ui/link-box"
+import { LinkOverlay } from "./ui/link-box"
+import { List, ListItem } from "./ui/list"
+
+import { useRtlFlip } from "@/hooks/useRtlFlip"
+
+type Person = {
   name: string
-  username?: string | null
+  username: string
   score: number
 }
 
-export interface IProps {
-  content: Array<Person>
+type LeaderboardProps = {
+  content: Person[]
   limit?: number
 }
 
-const Leaderboard: React.FC<IProps> = ({ content, limit = 100 }) => {
-  const colorModeStyles = useColorModeValue(
-    {
-      listBoxShadow: "tableBox.light",
-      linkBoxShadow: "tableItemBox.light",
-      scoreColor: "blackAlpha.700",
-    },
-    {
-      listBoxShadow: "tableBox.dark",
-      linkBoxShadow: "tableItemBox.dark",
-      scoreColor: "whiteAlpha.600",
-    }
-  )
-
-  const { t } = useTranslation()
+const Leaderboard = ({ content, limit = 100 }: LeaderboardProps) => {
+  const { twFlipForRtl } = useRtlFlip()
+  const { t } = useTranslation("page-bug-bounty")
 
   return (
     <List
-      bgColor="background"
-      boxShadow={colorModeStyles.listBoxShadow}
-      w="100%"
-      mb={8}
-      ml={0}
+      className="mb-8 ms-0 w-full list-none bg-background shadow-table-box"
       aria-label={t("page-upgrades-bug-bounty-leaderboard-list")}
     >
       {content
         .filter((_, idx) => idx < limit)
-        .map((item, idx) => {
-          const { name, username, score } = item
-
-          const hasGitHub = username !== ""
-          const avatarImg = hasGitHub
-            ? `${githubUrl}${username}.png?size=40`
-            : "https://github.com/random.png?size=40"
+        .map(({ name, username, score }, idx) => {
+          const hasGitHub = !!username
+          const avatarImg = GITHUB_URL + (username || "random") + ".png?size=40"
           const avatarAlt = hasGitHub ? `${username} GitHub avatar` : ""
+
           let emoji: string | null = null
           if (idx === 0) {
             emoji = ":trophy:"
@@ -73,49 +49,25 @@ const Leaderboard: React.FC<IProps> = ({ content, limit = 100 }) => {
             emoji = ":3rd_place_medal:"
           }
 
-          const PLACE_WORDS = [
-            "first",
-            "second",
-            "third",
-            "fourth",
-            "fifth",
-          ] as const
           return (
-            <ListItem mb={0}>
+            <ListItem className="mb-0" key={username}>
               <LinkBox
+                className="mb-1 flex w-full items-center justify-between p-4 shadow-table-item-box hover:rounded-lg hover:bg-background-highlight hover:no-underline hover:shadow-primary"
                 key={idx}
-                display="flex"
-                justifyContent="space-between"
-                alignItems="center"
-                boxShadow={colorModeStyles.linkBoxShadow}
-                mb={0.25}
-                p={4}
-                w="100%"
-                _hover={{
-                  textDecor: "none",
-                  borderRadius: 0.5,
-                  boxShadow: "0 0 1px primary",
-                  background: "tableBackgroundHover",
-                }}
               >
-                <Box mr={4} opacity="0.4">
-                  {idx + 1}
-                </Box>
+                <div className="me-4 opacity-40">{idx + 1}</div>
                 <Avatar
                   src={avatarImg}
                   name={avatarAlt}
-                  mr={4}
-                  h={10}
-                  w={10}
-                  display={{ base: "none", xs: "block" }}
+                  // This meets the Design System requirement, despite the leaderboard item itself being a link
+                  href={hasGitHub ? `${GITHUB_URL}${username}` : "#"}
+                  // `size-10` is not part of a "size" variant
+                  className="me-4 size-10"
                 />
-                <Flex flex="1 1 75%" direction="column" mr={8}>
+                <Flex className="me-8 flex-1 basis-3/4 flex-col">
                   <LinkOverlay
-                    as={Link}
-                    href={hasGitHub ? `${githubUrl}${username}` : "#"}
-                    textDecor="none"
-                    color="text"
-                    hideArrow
+                    className="text-body no-underline"
+                    href={hasGitHub ? `${GITHUB_URL}${username}` : "#"}
                   >
                     <VisuallyHidden>{`In place number ${
                       idx + 1
@@ -126,20 +78,14 @@ const Leaderboard: React.FC<IProps> = ({ content, limit = 100 }) => {
                     )}
                   </LinkOverlay>
 
-                  <Box fontSize="sm" color={colorModeStyles.scoreColor}>
-                    {score}{" "}
-                    <Translation id="page-upgrades-bug-bounty-leaderboard-points" />
-                  </Box>
+                  <div className="text-sm text-body-medium">
+                    {score} {t("page-upgrades-bug-bounty-leaderboard-points")}
+                  </div>
                 </Flex>
-                {emoji && <Emoji mr={8} fontSize="2xl" text={emoji} />}
-                <Box
-                  as="span"
-                  _after={{
-                    content: '"↗"',
-                    ml: 0.5,
-                    mr: 1.5,
-                  }}
-                ></Box>
+                {emoji && <Emoji className="me-8 text-2xl" text={emoji} />}
+                <span
+                  className={`after:me-1.5 after:ms-0.5 after:content-['↗'] after:${twFlipForRtl} after:inline-block`}
+                />
               </LinkBox>
             </ListItem>
           )

@@ -1,69 +1,68 @@
-import React from "react"
-import { Flex, FlexProps, Text } from "@chakra-ui/react"
-import Emoji from "./Emoji"
+import type { ReactNode } from "react"
 
-export interface IProps extends FlexProps {
-  children?: React.ReactNode
-  className?: string
+import Emoji from "@/components/Emoji"
+
+import { cn } from "@/lib/utils/cn"
+
+import { Flex, VStack } from "./ui/flex"
+
+type InfoBannerProps = {
+  children?: ReactNode
   emoji?: string
   isWarning?: boolean
   shouldCenter?: boolean
   shouldSpaceBetween?: boolean
   title?: string
+  id?: string
+  className?: string
 }
 
-const InfoBanner: React.FC<IProps> = ({
+const InfoBanner = ({
   children,
-  className,
   emoji,
-  isWarning = false,
-  shouldCenter = false,
-  shouldSpaceBetween = false,
+  isWarning,
+  shouldCenter,
+  shouldSpaceBetween,
   title,
+  className,
   ...props
-}) => {
+}: InfoBannerProps) => {
   const banner = (
-    <Flex
-      align="center"
-      p={6}
-      borderRadius={"sm"}
-      maxW={shouldCenter ? "55rem" : "100%"}
-      sx={{
-        "*": {
-          color: "black300 !important",
-        },
-      }}
-      bg={isWarning ? "warning" : "infoBanner"}
-      direction={{ base: "column", sm: "row" }}
+    <VStack
+      className={cn(
+        "rounded-sm p-6 sm:flex-row",
+        shouldCenter ? "max-w-[55rem]" : "max-w-full",
+        isWarning
+          ? "bg-warning-light dark:text-body-inverse"
+          : "bg-primary-low-contrast",
+        className
+      )}
       {...props}
     >
       {emoji && (
         <Emoji
-          flexGrow="0"
-          flexShrink="0"
-          mr={{ base: 0, sm: 6 }}
-          mb={{ base: 2, sm: 0 }}
-          alignSelf={{ base: "flex-start", sm: "auto" }}
+          className="mb-2 me-0 flex-shrink-0 flex-grow-0 self-start text-4xl sm:mb-0 sm:me-6 sm:self-auto"
           text={emoji}
-          fontSize="4xl"
         />
       )}
       <Flex
-        display={{ base: "block", sm: shouldSpaceBetween ? "flex" : "block" }}
-        align={shouldSpaceBetween ? "center" : "auto"}
-        w={shouldSpaceBetween ? "100%" : "auto"}
-        justify={shouldSpaceBetween ? "space-between" : "auto"}
-      >
-        {title && (
-          <Text fontSize="lg" fontWeight="700">
-            {title}
-          </Text>
+        className={cn(
+          "block",
+          shouldSpaceBetween
+            ? "w-full items-center justify-between sm:flex"
+            : "w-auto sm:block"
         )}
+      >
+        {title && <p className="mb-6 text-lg font-bold">{title}</p>}
         {children}
       </Flex>
-    </Flex>
+    </VStack>
   )
-  return shouldCenter ? <Flex justify="center">{banner}</Flex> : banner
+  return shouldCenter ? (
+    <Flex className="justify-center">{banner}</Flex>
+  ) : (
+    banner
+  )
 }
 
 export default InfoBanner

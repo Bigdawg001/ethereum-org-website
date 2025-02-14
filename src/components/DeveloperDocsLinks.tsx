@@ -1,45 +1,43 @@
 import React from "react"
-import { ListItem, UnorderedList } from "@chakra-ui/react"
-import Translation from "./Translation"
-import Link from "./Link"
-import docLinks from "../data/developer-docs-links.yaml"
 
-export interface IProps {
+import Translation from "@/components/Translation"
+
+import docLinks from "@/data/developer-docs-links.yaml"
+
+import InlineLink from "./ui/Link"
+import { ListItem, UnorderedList } from "./ui/list"
+
+export type DeveloperDocsLinksProps = {
   headerId: string
 }
 
-const DeveloperDocsLinks: React.FC<IProps> = ({ headerId }) => (
+const DeveloperDocsLinks = ({ headerId }: DeveloperDocsLinksProps) => (
   <React.Fragment>
     {docLinks
       .filter(({ id }) => id.includes(headerId))
       .map(({ items, id }) => (
-        <UnorderedList ml={6} spacing={3} key={id}>
+        <UnorderedList className="ms-6 space-y-3" key={id}>
           {items &&
-            items.map(({ id, to, path, description, items }) => (
+            items.map(({ id, href, path, description, items }) => (
               <ListItem key={id}>
-                {to || path ? (
-                  <Link to={to || path}>
-                    <Translation id={id} />
-                  </Link>
+                {href || path ? (
+                  <InlineLink href={href || path}>
+                    <Translation id={`page-developers-docs:${id}`} />
+                  </InlineLink>
                 ) : (
-                  <Translation id={id} />
+                  <Translation id={`page-developers-docs:${id}`} />
                 )}
                 <i>
                   {" – "}
-                  <Translation id={description} />
+                  <Translation id={`page-developers-docs:${description}`} />
                 </i>
-                <UnorderedList
-                  ml={6}
-                  mt={3}
-                  spacing={3}
-                  style={{ listStyleType: "circle" }}
-                >
+                <UnorderedList className="ms-6 mt-3 list-[circle] space-y-3">
                   {items &&
-                    items.map(({ id, to, path }) => (
+                    items.map(({ id, href, path }) => (
                       <ListItem key={id}>
-                        <Link to={to || path}>
-                          <Translation id={id} />
-                        </Link>
+                        <InlineLink href={href || path}>
+                          <Translation id={`page-developers-docs:${id}`} />
+                        </InlineLink>
                       </ListItem>
                     ))}
                 </UnorderedList>

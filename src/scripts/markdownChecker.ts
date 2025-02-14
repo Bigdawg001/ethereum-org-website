@@ -1,22 +1,52 @@
-import { Lang } from "../utils/languages"
+import fs from "fs"
+import path from "path"
 
-const fs = require("fs")
-const path = require("path")
-const matter = require("gray-matter")
-const argv = require("minimist")(process.argv.slice(2))
+import matter from "gray-matter"
+import minimist from "minimist"
+
+import type { Lang } from "../lib/types"
+
+type Summary = Record<string, string[]>
+
+const argv = minimist(process.argv.slice(2))
 
 const LANG_ARG: string | null = argv.lang || null
-const PATH_TO_INTL_MARKDOWN = "./src/content/translations/"
-const PATH_TO_ALL_CONTENT = "./src/content/"
+const PATH_TO_INTL_MARKDOWN = "./public/content/translations/"
+const PATH_TO_ALL_CONTENT = "./public/content/"
 const TUTORIAL_DATE_REGEX = new RegExp("\\d{4}-\\d{2}-\\d{2}")
+// Original
 const WHITE_SPACE_IN_LINK_TEXT = new RegExp(
   "\\[\\s.+\\]\\( | \\[.+\\s\\]\\(",
   "g"
 )
+// Modified
+// const WHITE_SPACE_IN_LINK_TEXT = new RegExp(
+//   "\\[\\s.+?\\]\\(|\\[.+?\\s\\]\\(",
+//   "g"
+// )
 const BROKEN_LINK_REGEX = new RegExp(
   "\\[[^\\]]+\\]\\([^\\)\\s]+\\s[^\\)]+\\)",
   "g"
 )
+// This RegEx checks for invalid links in markdown content.
+// The criteria for invalid links are:
+// 1. Exclude images: The link shouldn't be preceded by an exclamation mark
+// 2. Exclude internal links: The URL part of the link shouldn't start with a forward slash
+// 3. Exclude fragment identifiers: The URL part of the link shouldn't start with a hash
+// 4. Exclude typical external links: The URL part of the link shouldn't start with http or https
+// 5. Exclude email links: The URL part of the link shouldn't start with mailto:
+// 6. Exclude PDF links: The URL part of the link shouldn't end with .pdf
+// 7. Exclude links wrapped in angled brackets: The URL part of the link shouldn't start with a <
+const INVALID_LINK_REGEX = new RegExp(
+  "(?<!\\!)\\[[^\\]]+\\]\\((?!<|/|#|http|mailto:)[^\\)]*(?<!\\.pdf)\\)",
+  "g"
+)
+const INCORRECT_PATH_IN_TRANSLATED_MARKDOWN = new RegExp(
+  "image: ../../(assets/|../assets/)",
+  "g"
+)
+
+const LINK_TEXT_MISSING_REGEX = new RegExp("(?<![\\S])\\[\\]\\(([^)]+)\\)", "g")
 
 // add <emoji
 // add /developers/docs/scaling/#layer-2-scaling
@@ -36,7 +66,10 @@ const SPELLING_MISTAKES: Array<string> = [
   "Ehtereum",
   "Eferum",
 ]
-const CASE_SENSITVE_SPELLING_MISTAKES = ["Thereum", "Metamask", "Github"]
+
+// ! Current usage of this const is commented out
+// eslint-disable-next-line unused-imports/no-unused-vars
+const CASE_SENSITIVE_SPELLING_MISTAKES = ["Thereum", "Metamask", "Github"]
 // Ideas:
 // Regex for explicit lang path (e.g. /en/) && for glossary links (trailing slash breaks links e.g. /glossary/#pos/ doesn't work)
 // We should have case sensitive spelling mistakes && check they are not in links.
@@ -45,14 +78,14 @@ interface Languages {
   lang?: Array<Lang>
 }
 
-const langsArray: Array<Lang> = fs.readdirSync(PATH_TO_INTL_MARKDOWN)
+const langsArray = fs.readdirSync(PATH_TO_INTL_MARKDOWN) as Array<Lang>
 langsArray.push("en")
 
 function getAllMarkdownPaths(
   dirPath: string,
   arrayOfMarkdownPaths: Array<string> = []
 ): Array<string> {
-  let files: Array<string> = fs.readdirSync(dirPath)
+  const files: Array<string> = fs.readdirSync(dirPath)
 
   arrayOfMarkdownPaths = arrayOfMarkdownPaths || []
 
@@ -74,102 +107,173 @@ function getAllMarkdownPaths(
   return arrayOfMarkdownPaths
 }
 
-function sortMarkdownPathsIntoLanguages(paths: Array<string>): Languages {
+function sortMarkdownPathsIntoLanguages(
+  paths: Array<string>,
+  excludeDefaultLang: boolean = false
+): Languages {
   const languages: Languages = langsArray.reduce((accumulator, value) => {
     return { ...accumulator, [value]: [] }
   }, {})
 
   for (const path of paths) {
-    const isTranslation = path.includes("/translations/")
-    const langIndex = path.indexOf("/translations/") + 14
-    const isFourCharLang = path.includes("pt-br") || path.includes("zh-tw")
-    const charactersToSlice: number = isFourCharLang ? 5 : 2
+    const translationDir = "/translations/"
+    const isTranslation = path.includes(translationDir)
+    const langIndex = path.indexOf(translationDir) + translationDir.length
 
-    const lang = isTranslation
-      ? path.slice(langIndex, langIndex + charactersToSlice)
-      : "en"
+    // RegEx to grab the root of the path (e.g. the lang code for translated files)
+    const regex = /^([^/]+)\//
+    const match = path.substring(langIndex).match(regex)
+    const lang = isTranslation && match && match.length > 1 ? match[1] : "en"
 
     if (LANG_ARG) {
-      if (LANG_ARG === lang) {
+      if (LANG_ARG === lang && (lang !== "en" || !excludeDefaultLang)) {
         languages[lang].push(path)
       }
     } else {
-      languages[lang].push(path)
+      if (lang !== "en" || !excludeDefaultLang) {
+        languages[lang].push(path)
+      }
     }
   }
 
   return languages
 }
 
-interface MatterData {
-  title: string
-  description: string
-  lang: Lang
-  published: Date
-  sidebar: string
-  skill: string
+export async function getTranslatedMarkdownPaths() {
+  const markdownPaths: Array<string> = getAllMarkdownPaths(PATH_TO_ALL_CONTENT)
+  const excludeDefaultLang = true
+  const languages = sortMarkdownPathsIntoLanguages(
+    markdownPaths,
+    excludeDefaultLang
+  )
+  return languages
 }
 
-function processFrontmatter(path: string, lang: string): void {
-  const file: Buffer = fs.readFileSync(path, "utf-8")
-  const frontmatter: MatterData = matter(file).data
+function log(
+  message: string,
+  level: "warn" | "error" | "log",
+  summary: string[]
+) {
+  summary.push(message)
+  console[level](message)
+}
+
+function processFrontmatter(
+  path: string,
+  lang: string,
+  summary: string[]
+): string[] {
+  const file = fs.readFileSync(path, "utf-8")
+  const frontmatter = matter(file).data
 
   if (!frontmatter.title) {
-    console.warn(`Missing 'title' frontmatter at ${path}:`)
+    log(`Missing 'title' frontmatter at: ${path}`, "warn", summary)
   }
   // Description commented out as there are a lot of them missing :-)!
   // if (!frontmatter.description) {
-  //   console.warn(`Missing 'description' frontmatter at ${path}:`)
+  //   summary.push(`Missing 'description' frontmatter at: ${path}`)
   // }
   if (!frontmatter.lang) {
-    console.error(`Missing 'lang' frontmatter at ${path}: Expected: ${lang}:'`)
+    log(
+      `Missing 'lang' frontmatter at: ${path}, Expected: ${lang}'`,
+      "error",
+      summary
+    )
   } else if (!(frontmatter.lang === lang)) {
-    console.error(
-      `Invalid 'lang' frontmatter at ${path}: Expected: ${lang}'. Received: ${frontmatter.lang}.`
+    log(
+      `Invalid 'lang' frontmatter at ${path}: Expected: ${lang}'. Received: ${frontmatter.lang}.`,
+      "error",
+      summary
     )
   }
 
+  if (frontmatter.emoji) {
+    if (!/^:\S+:$/.test(frontmatter.emoji)) {
+      log(`Frontmatter for 'emoji' is invalid at ${path}`, "error", summary)
+    }
+  }
+
   if (frontmatter.sidebar) {
-    console.error(`Unexpected 'sidebar' frontmatter at ${path}`)
+    log(`Unexpected 'sidebar' frontmatter at ${path}`, "error", summary)
   }
 
   if (path.includes("/tutorials/")) {
     if (!frontmatter.published) {
-      console.warn(`Missing 'published' frontmatter at ${path}:`)
+      log(`Missing 'published' frontmatter at ${path}:`, "warn", summary)
     } else {
       try {
-        let stringDate = frontmatter.published.toISOString().slice(0, 10)
+        const stringDate = frontmatter.published.toISOString().slice(0, 10)
         const dateIsFormattedCorrectly = TUTORIAL_DATE_REGEX.test(stringDate)
 
         if (!dateIsFormattedCorrectly) {
-          console.warn(
-            `Invalid 'published' frontmatter at ${path}: Expected: 'YYYY-MM-DD' Received: ${frontmatter.published}`
+          log(
+            `Invalid 'published' frontmatter at ${path}: Expected: 'YYYY-MM-DD' Received: ${frontmatter.published}`,
+            "warn",
+            summary
           )
         }
       } catch (e) {
-        console.warn(
-          `Invalid 'published' frontmatter at ${path}: Expected: 'YYYY-MM-DD' Received: ${frontmatter.published}`
+        log(
+          `Invalid 'published' frontmatter at ${path}: Expected: 'YYYY-MM-DD' Received: ${frontmatter.published}`,
+          "warn",
+          summary
         )
       }
     }
 
     if (!["beginner", "intermediate", "advanced"].includes(frontmatter.skill)) {
-      console.log(
-        `Skill frontmatter '${frontmatter.skill}' must be: beginner, intermediate, or advanced at: ${path}:`
+      log(
+        `Skill frontmatter '${frontmatter.skill}' must be: beginner, intermediate, or advanced at: ${path}:`,
+        "log",
+        summary
       )
     }
   }
+
+  return summary
 }
 
-function processMarkdown(path: string) {
+function processMarkdown(path: string, summary: string[]) {
   const markdownFile: string = fs.readFileSync(path, "utf-8")
   let brokenLinkMatch: RegExpExecArray | null
 
   while ((brokenLinkMatch = BROKEN_LINK_REGEX.exec(markdownFile))) {
     const lineNumber = getLineNumber(markdownFile, brokenLinkMatch.index)
-    console.warn(`Broken link found: ${path}:${lineNumber}`)
+    log(`Broken link found: ${path}:${lineNumber}`, "warn", summary)
 
     // if (!BROKEN_LINK_REGEX.global) break
+  }
+
+  let invalidLinkMatch: RegExpExecArray | null
+
+  // Check for invalid links
+  while ((invalidLinkMatch = INVALID_LINK_REGEX.exec(markdownFile))) {
+    const lineNumber = getLineNumber(markdownFile, invalidLinkMatch.index)
+    log(`Invalid link found: ${path}:${lineNumber}`, "warn", summary)
+  }
+
+  let linkTextMissingMatch: RegExpExecArray | null
+
+  // Check for links missing text
+  while ((linkTextMissingMatch = LINK_TEXT_MISSING_REGEX.exec(markdownFile))) {
+    const lineNumber = getLineNumber(markdownFile, linkTextMissingMatch.index)
+    log(`Link text missing: ${path}:${lineNumber}`, "warn", summary)
+  }
+
+  let incorrectImagePathMatch: RegExpExecArray | null
+
+  // Todo: refactor to simply check if the image exists relative to the path
+  if (path.includes("/translations/")) {
+    while (
+      (incorrectImagePathMatch =
+        INCORRECT_PATH_IN_TRANSLATED_MARKDOWN.exec(markdownFile))
+    ) {
+      const lineNumber = getLineNumber(
+        markdownFile,
+        incorrectImagePathMatch.index
+      )
+      log(`Incorrect image path: ${path}:${lineNumber}`, "warn", summary)
+    }
   }
 
   // TODO: refactor history pages to use a component for network upgrade summaries
@@ -177,6 +281,14 @@ function processMarkdown(path: string) {
   // Ignore tutorials with Javascript and ExpandableCards
   if (
     !path.includes("/history/") &&
+    !path.includes("/whitepaper/") &&
+    !path.includes("/roadmap/") &&
+    !path.includes("alchemy") &&
+    !path.includes("nft") &&
+    !path.includes("hello-world-smart-contract") &&
+    !path.includes("opcodes") &&
+    !path.includes("translation-program") &&
+    !path.includes("/energy-consumption/") &&
     !markdownFile.includes("```javascript") &&
     !markdownFile.includes("ExpandableCard")
   ) {
@@ -186,7 +298,11 @@ function processMarkdown(path: string) {
 
       while ((htmlTagMatch = htmlTagRegex.exec(markdownFile))) {
         const lineNumber = getLineNumber(markdownFile, htmlTagMatch.index)
-        console.warn(`Warning: ${tag} tag in markdown at ${path}:${lineNumber}`)
+        log(
+          `Warning: ${tag} tag in markdown at ${path}:${lineNumber}`,
+          "warn",
+          summary
+        )
 
         if (!htmlTagRegex.global) break
       }
@@ -203,18 +319,23 @@ function processMarkdown(path: string) {
       markdownFile,
       whiteSpaceInLinkTextMatch.index
     )
-    console.warn(`Warning: White space in link found: ${path}:${lineNumber}`)
+    log(
+      `Warning: White space in link found: ${path}:${lineNumber}`,
+      "warn",
+      summary
+    )
   }
 
-  checkMarkdownSpellingMistakes(path, markdownFile, SPELLING_MISTAKES)
+  checkMarkdownSpellingMistakes(path, markdownFile, SPELLING_MISTAKES, summary)
   // Turned this off for testing as there are lots of Github (instead of GitHub) and Metamask (instead of MetaMask).
-  // checkMarkdownSpellingMistakes(path, markdownFile, CASE_SENSITVE_SPELLING_MISTAKES, true)
+  // checkMarkdownSpellingMistakes(path, markdownFile, CASE_SENSITIVE_SPELLING_MISTAKES, true)
 }
 
 function checkMarkdownSpellingMistakes(
   path: string,
   file: string,
   spellingMistakes: Array<string>,
+  summary: string[],
   caseSensitive = false
 ): void {
   for (const mistake of spellingMistakes) {
@@ -225,8 +346,10 @@ function checkMarkdownSpellingMistakes(
 
     while ((spellingMistakeMatch = mistakeRegex.exec(file))) {
       const lineNumber = getLineNumber(file, spellingMistakeMatch.index)
-      console.warn(
-        `Spelling mistake "${mistake}" found at ${path}:${lineNumber}`
+      log(
+        `Spelling mistake "${mistake}" found at ${path}:${lineNumber}`,
+        "warn",
+        summary
       )
     }
 
@@ -244,17 +367,31 @@ function getLineNumber(file: string, index: number): string {
   return lineNumber
 }
 
-function checkMarkdown(): void {
+const writeSummary = (summary: Summary, summaryWritePath: string) => {
+  fs.writeFileSync(summaryWritePath, JSON.stringify(summary, null, 2))
+}
+
+export function checkMarkdown(summaryWritePath?: string) {
+  console.log("Checking markdown for common issues...")
+  const summary = {} as Summary
   const markdownPaths: Array<string> = getAllMarkdownPaths(PATH_TO_ALL_CONTENT)
   const markdownPathsByLang: Languages =
     sortMarkdownPathsIntoLanguages(markdownPaths)
 
   for (const lang in markdownPathsByLang) {
+    summary[lang] = []
+
     for (const path of markdownPathsByLang[lang]) {
-      processFrontmatter(path, lang)
-      processMarkdown(path)
+      processFrontmatter(path, lang, summary[lang])
+      processMarkdown(path, summary[lang])
     }
+
+    if (!summary[lang].length) delete summary[lang]
   }
+  if (!summaryWritePath) return
+
+  writeSummary(summary, summaryWritePath)
+  console.log("Writing markdown checker summary to:", summaryWritePath)
 }
 
 checkMarkdown()

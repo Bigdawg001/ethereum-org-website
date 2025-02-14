@@ -1,13 +1,11 @@
-import React, { useEffect, useState } from "react"
-import { shuffle } from "lodash"
+import { useEffect, useState } from "react"
+import shuffle from "lodash/shuffle"
 
-import { Box, Flex, Image, LinkBox, LinkOverlay, Text } from "@chakra-ui/react"
+import { Flex } from "@/components/ui/flex"
+import InlineLink from "@/components/ui/Link"
+import { LinkBox, LinkOverlay } from "@/components/ui/link-box"
 
-import data from "../data/contributors.json"
-
-import Link from "./Link"
-
-export interface IProps {}
+import data from "!!raw-loader!@/../.all-contributorsrc"
 
 export interface Contributor {
   login: string
@@ -17,14 +15,13 @@ export interface Contributor {
   contributions: Array<string>
 }
 
-const Contributors: React.FC<IProps> = () => {
-  const [contributorsList, setContributorsList] = useState<Array<Contributor>>(
-    []
-  )
+const allContributors = JSON.parse(data)
+
+const Contributors = () => {
+  const [contributorsList, setContributorsList] = useState<Contributor[]>([])
 
   useEffect(() => {
-    const list = shuffle(data.contributors)
-    setContributorsList(list)
+    setContributorsList(shuffle(allContributors.contributors))
   }, [])
 
   return (
@@ -34,51 +31,31 @@ const Contributors: React.FC<IProps> = () => {
         have contributed so far!
       </p>
 
-      <Flex flexWrap="wrap">
-        {contributorsList.map((contributor, idx) => (
+      <Flex className="flex-wrap">
+        {contributorsList.map((contributor) => (
           <LinkBox
             as="div"
-            maxWidth="132px"
-            margin="2"
-            boxShadow="0px 14px 66px rgba(0, 0, 0, 0.07), 0px 10px 17px rgba(0, 0, 0, 0.03), 0px 4px 7px rgba(0, 0, 0, 0.05)"
-            _hover={{
-              textDecoration: "none",
-              borderRadius: "base",
-              boxShadow: "0px 8px 17px rgba(0, 0, 0, 0.15)",
-              background: "tableBackgroundHover",
-              transition: "transform 0.1s",
-              transform: "scale(1.02)",
-            }}
-            _focus={{
-              textDecoration: "none",
-              borderRadius: "base",
-              boxShadow: "0px 8px 17px rgba(0, 0, 0, 0.15)",
-              background: "tableBackgroundHover",
-              transition: "transform 0.1s",
-              transform: "scale(1.02)",
-            }}
+            className="m-2 max-w-[132px] transform shadow transition-transform duration-100 hover:scale-[1.02] hover:rounded hover:bg-background-highlight focus:scale-[1.02] focus:rounded"
+            key={contributor.login}
           >
-            <Image
-              width="132px"
-              height="132px"
+            <img
+              className="h-[132px] w-[132px]"
               src={contributor.avatar_url}
               alt={contributor.name}
             />
-            <Box padding="1rem">
-              <Text as="h3" fontSize="md" marginTop="2" marginBottom="4">
-                <LinkOverlay
-                  as={Link}
-                  href={contributor.profile}
-                  hideArrow
-                  color="text"
-                  textDecoration="none"
-                  _hover={{ textDecoration: "none" }}
-                  isExternal={true}
-                >
-                  {contributor.name}
+            <div className="p-4">
+              <h3 className="mb-4 mt-2 text-md">
+                <LinkOverlay asChild>
+                  <InlineLink
+                    className="text-body no-underline hover:no-underline"
+                    href={contributor.profile}
+                    hideArrow
+                  >
+                    {contributor.name}
+                  </InlineLink>
                 </LinkOverlay>
-              </Text>
-            </Box>
+              </h3>
+            </div>
           </LinkBox>
         ))}
       </Flex>

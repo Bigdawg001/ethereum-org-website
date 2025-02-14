@@ -1,30 +1,31 @@
-import React, { ReactNode, useState } from "react"
-import { Box, Center, HStack, Icon } from "@chakra-ui/react"
+import React, { useState } from "react"
+import { AnimatePresence, motion } from "framer-motion"
+import { useTranslation } from "next-i18next"
+import { MdChevronRight } from "react-icons/md"
 
-import { motion, AnimatePresence } from "framer-motion"
-import { MdExpandMore } from "react-icons/md"
+import type { ChildOnlyProp, TranslationKey } from "@/lib/types"
+import { DeveloperDocsLink } from "@/lib/interfaces"
 
-import Link, { IProps as ILinkProps } from "./Link"
-import Translation from "./Translation"
-import { isLang } from "../utils/languages"
-import { dropdownIconContainerVariant } from "./SharedStyledComponents"
-import { IPropsNavLink as INavLinkProps } from "./SideNav"
+import docLinks from "@/data/developer-docs-links.yaml"
 
-import docLinks from "../data/developer-docs-links.yaml"
-import { DeveloperDocsLink } from "../types"
-import { TranslationKey } from "../utils/translations"
+import { Center, HStack } from "./ui/flex"
+import { BaseLink, LinkProps } from "./ui/Link"
+import {
+  dropdownIconContainerVariant,
+  type NavLinkProps as SideNavLinkProps,
+} from "./SideNav"
 
 // Traverse all links to find page id
 const getPageTitleId = (
-  to: string,
+  href: string,
   links: Array<DeveloperDocsLink>
 ): TranslationKey => {
   for (const link of links) {
-    if (link.to === to) {
+    if (link.href === href) {
       return link.id
     }
     if (link.items) {
-      let pageTitle = getPageTitleId(to, link.items)
+      const pageTitle = getPageTitleId(href, link.items)
       if (pageTitle) {
         return pageTitle
       }
@@ -44,80 +45,61 @@ const innerLinksVariants = {
   },
 }
 
-const LinkContainer: React.FC<{ children: ReactNode }> = ({ children }) => {
+const LinkContainer = ({ children }: ChildOnlyProp) => {
   return (
-    <HStack
-      w="full"
-      justify="space-between"
-      py={2}
-      pr={8}
-      pl={2}
-      _hover={{
-        bgColor: "ednBackground",
-      }}
-    >
+    <HStack className="w-full justify-between py-2 pe-8 ps-2 hover:bg-[ednBackground]">
       {children}
     </HStack>
   )
 }
 
-const SideNavLink: React.FC<ILinkProps> = ({ children, ...props }) => {
+const SideNavLink = ({ children, ...props }: LinkProps) => {
   return (
-    <Link
-      w="full"
-      textDecoration="none"
-      color="text"
-      _hover={{
-        textDecoration: "none",
-        color: "primary",
-      }}
-      _active={{
-        color: "primary",
-      }}
+    <BaseLink
+      className="w-full text-body no-underline hover:text-primary"
       {...props}
     >
       {children}
-    </Link>
+    </BaseLink>
   )
 }
 
-export interface IPropsNavLink extends INavLinkProps {
+export type NavLinkProps = SideNavLinkProps & {
   toggle: () => void
 }
 
-const NavLink: React.FC<IPropsNavLink> = ({ item, path, toggle }) => {
+const NavLink = ({ item, path, toggle }: NavLinkProps) => {
+  const { t } = useTranslation("page-developers-docs")
   const [isOpen, setIsOpen] = useState<boolean>(false)
 
   if (item.items) {
     return (
-      <Box>
+      <div>
         <LinkContainer>
-          {item.to && (
-            <SideNavLink to={item.to} isPartiallyActive={false}>
-              <Translation id={item.id} />
+          {item.href && (
+            <SideNavLink href={item.href} isPartiallyActive={false}>
+              {t(item.id)}
             </SideNavLink>
           )}
-          {!item.to && (
-            <Box w="full" cursor="pointer" onClick={() => setIsOpen(!isOpen)}>
-              <Translation id={item.id} />
-            </Box>
+          {!item.href && (
+            <div
+              className="w-full cursor-pointer"
+              onClick={() => setIsOpen(!isOpen)}
+            >
+              {t(item.id)}
+            </div>
           )}
-          <Box
-            as={motion.div}
-            cursor="pointer"
+          <motion.div
+            className="flex cursor-pointer"
             onClick={() => setIsOpen(!isOpen)}
             variants={dropdownIconContainerVariant}
             animate={isOpen ? "open" : "closed"}
           >
-            <Icon as={MdExpandMore} boxSize={6} color="secondary" />
-          </Box>
+            <MdChevronRight className="h-6 w-6 text-body-medium" />
+          </motion.div>
         </LinkContainer>
-        <Box
-          as={motion.div}
-          fontSize="sm"
-          lineHeight="tall"
-          fontWeight="normal"
-          pl={4}
+        <motion.div
+          className="ps-4 text-sm font-normal leading-relaxed"
           key={item.id}
           animate={isOpen ? "open" : "closed"}
           variants={innerLinksVariants}
@@ -126,85 +108,56 @@ const NavLink: React.FC<IPropsNavLink> = ({ item, path, toggle }) => {
           {item.items.map((childItem, idx) => (
             <NavLink item={childItem} path={path} key={idx} toggle={toggle} />
           ))}
-        </Box>
-      </Box>
+        </motion.div>
+      </div>
     )
   }
   return (
-    <Box onClick={toggle}>
+    <div onClick={toggle}>
       <LinkContainer>
-        <SideNavLink to={item.to} isPartiallyActive={false}>
-          <Translation id={item.id} />
+        <SideNavLink href={item.href} isPartiallyActive={false}>
+          {t(item.id)}
         </SideNavLink>
       </LinkContainer>
-    </Box>
+    </div>
   )
 }
 
-export interface IProps {
+export type SideNavMobileProps = {
   path: string
 }
 
 // TODO consolidate into SideNav
-const SideNavMobile: React.FC<IProps> = ({ path }) => {
+const SideNavMobile = ({ path }: SideNavMobileProps) => {
+  const { t } = useTranslation("page-developers-docs")
+
   const [isOpen, setIsOpen] = useState<boolean>(false)
 
-  // Strip language path
-  let pagePath = path
-  if (isLang(pagePath.split("/")[1])) {
-    pagePath = pagePath.substring(3)
-  }
-  let pageTitleId = getPageTitleId(pagePath, docLinks)
-  if (!pageTitleId) {
-    console.warn(`No id found for "pagePath": `, pagePath)
-    pageTitleId = `Change page` as TranslationKey
-  }
+  // Add trailing slash to path for docLinks match
+  const pageTitleId =
+    getPageTitleId(path + "/", docLinks) || ("Change page" as TranslationKey)
+
   return (
-    <Box
-      position="sticky"
-      zIndex={2}
-      top="75px"
-      bgColor="ednBackground"
-      height="auto"
-      w="full"
-      display={{ base: "block", lg: "none" }}
-    >
-      <Center
-        as={motion.div}
-        fontWeight="medium"
-        color="primary"
-        cursor="pointer"
-        py={4}
-        px={8}
-        boxSizing="border-box"
-        bg="ednBackground"
-        borderBottom="1px solid"
-        borderBottomColor="border"
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        <Box mr={2}>
-          <Translation id={pageTitleId} />
-        </Box>
-        <Box
-          as={motion.div}
-          cursor="pointer"
-          variants={dropdownIconContainerVariant}
-          animate={isOpen ? "open" : "closed"}
+    <div className="sticky top-[75px] z-sticky h-auto w-full bg-background-highlight lg:hidden">
+      <motion.div>
+        <Center
+          className="box-border cursor-pointer border-b bg-background-highlight px-8 py-4 font-medium text-primary"
+          onClick={() => setIsOpen(!isOpen)}
         >
-          <Icon as={MdExpandMore} boxSize={6} color="secondary" />
-        </Box>
-      </Center>
+          <div>{t(pageTitleId)}</div>
+          <motion.div
+            className="flex cursor-pointer"
+            variants={dropdownIconContainerVariant}
+            animate={isOpen ? "open" : "closed"}
+          >
+            <MdChevronRight className="h-6 w-6 text-body-medium" />
+          </motion.div>
+        </Center>
+      </motion.div>
       <AnimatePresence>
         {isOpen && (
-          <Box
-            as={motion.nav}
-            h="auto"
-            maxH="calc(100vh - 139px)" // full height minus primary nav
-            overflowY="scroll"
-            overflowX="hidden"
-            borderBottom="1px solid"
-            borderBottomColor="border"
-            p={2}
+          <motion.nav
+            className="max-h-[calc(100vh - 139px)] h-auto overflow-x-hidden overflow-y-scroll border-b p-2"
             key="nav"
             initial={{ opacity: 0 }}
             animate={{
@@ -229,10 +182,10 @@ const SideNavMobile: React.FC<IProps> = ({ path }) => {
                 toggle={() => setIsOpen(false)}
               />
             ))}
-          </Box>
+          </motion.nav>
         )}
       </AnimatePresence>
-    </Box>
+    </div>
   )
 }
 

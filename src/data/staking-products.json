@@ -2,27 +2,45 @@
   "nodeTools": [
     {
       "name": "Rocket Pool CLI",
-      "svgPath": "rocket-pool-glyph.svg",
+      "imageName": "RocketPool",
       "hue": 379,
       "launchDate": "2021-11-08",
-      "url": "https://rocketpool.net/node-operators",
+      "url": "https://docs.rocketpool.net/guides/node/responsibilities",
       "audits": [
         {
-          "name": "Sigma Prime",
+          "name": "Sigma Prime - May 2021",
           "url": "https://rocketpool.net/files/sigma-prime-audit.pdf"
         },
         {
-          "name": "Consensys Diligence",
+          "name": "Sigma Prime - Nov 2021",
+          "url": "https://rocketpool.net/files/sigma-prime-fix-review.pdf"
+        },
+        {
+          "name": "Sigma Prime - Redstone, June 2022",
+          "url": "https://rocketpool.net/files/sigma-prime-audit-redstone.pdf"
+        },
+        {
+          "name": "Sigma Prime - Atlas, Dec 2022",
+          "url": "https://rocketpool.net/files/sigma-prime-atlas-v1.2.pdf"
+        },
+        {
+          "name": "Consensys Diligence - 2021",
           "url": "https://consensys.net/diligence/audits/2021/04/rocketpool/"
         },
         {
-          "name": "Trail of Bits",
+          "name": "Consensys Diligence - Redstone, June 2022",
+          "url": "https://rocketpool.net/files/consensys-audit-redstone.pdf"
+        },
+        {
+          "name": "Consensys Diligence - Atlas, Jan 2023",
+          "url": "https://rocketpool.net/files/consensys-diligence-atlas-v1.2.pdf"
+        },
+        {
+          "name": "Trail of Bits - Sept 2021",
           "url": "https://github.com/trailofbits/publications/blob/master/reviews/RocketPool.pdf"
         }
       ],
-      "minEth": 16,
-      "additionalStake": "10",
-      "additionalStakeUnit": "% RPL",
+      "minEth": 10.4,
       "tokens": [
         {
           "name": "Rocket Pool ETH",
@@ -51,7 +69,7 @@
     },
     {
       "name": "Stereum",
-      "svgPath": "stereum-glyph.svg",
+      "imageName": "Stereum",
       "hue": 164,
       "launchDate": "2021-02-06",
       "url": "https://stereum.net/ethereum-node-setup/",
@@ -83,12 +101,12 @@
     },
     {
       "name": "DAppNode",
-      "svgPath": "dappnode-glyph.svg",
+      "imageName": "StakingDappnode",
       "hue": 196,
       "launchDate": "2020-12-01",
       "url": "https://dappnode.io",
       "audits": [],
-      "minEth": 32,
+      "minEth": 10.4,
       "isFoss": true,
       "hasBugBounty": false,
       "isTrustless": true,
@@ -110,7 +128,7 @@
     },
     {
       "name": "Ethereum on Arm",
-      "svgPath": "default-open-source-glyph.svg",
+      "imageName": "DefaultOpenSource",
       "hue": 209,
       "launchDate": "2021-03-25",
       "url": "https://ethereum-on-arm-documentation.readthedocs.io/",
@@ -135,11 +153,16 @@
     },
     {
       "name": "eth-docker",
-      "svgPath": "docker-icon.svg",
+      "imageName": "Docker",
       "hue": 221,
       "launchDate": "2021-06-05",
       "url": "https://eth-docker.net",
-      "audits": [],
+      "audits": [
+        {
+          "name": "Sigma Prime",
+          "url": "https://eth-docker.net/About/SecurityAudit"
+        }
+      ],
       "minEth": 32,
       "isFoss": true,
       "hasBugBounty": false,
@@ -160,7 +183,7 @@
     },
     {
       "name": "Vouch + Dirk",
-      "svgPath": "default-open-source-glyph.svg",
+      "imageName": "DefaultOpenSource",
       "hue": 239,
       "launchDate": "2020-12-01",
       "url": "https://www.attestant.io/posts/introducing-vouch/",
@@ -193,14 +216,12 @@
     },
     {
       "name": "Avado",
-      "svgPath": "avado-glyph.svg",
+      "imageName": "Avado",
       "hue": 239,
       "launchDate": "2018-12-01",
       "url": "https://ava.do/",
       "audits": [],
-      "minEth": 16,
-      "additionalStake": "10",
-      "additionalStakeUnit": "% RPL",
+      "minEth": 10.4,
       "isFoss": true,
       "hasBugBounty": false,
       "isTrustless": true,
@@ -219,12 +240,40 @@
         "eventAction": "Clicked",
         "eventName": "Clicked Avado go to link"
       }
+    },
+    {
+      "name": "Launchnodes",
+      "imageName": "Launchnodes",
+      "hue": 218,
+      "launchDate": "2020-09-01",
+      "url": "https://launchnodes.com/",
+      "audits": [],
+      "minEth": 32,
+      "isFoss": true,
+      "hasBugBounty": false,
+      "isTrustless": true,
+      "isPermissionless": false,
+      "multiClient": true,
+      "easyClientSwitching": false,
+      "platforms": ["Linux", "macOS", "Windows"],
+      "ui": ["CLI", "AWS", "Azure"],
+      "socials": {
+        "twitter": "https://twitter.com/launchnodes",
+        "youtube": "https://www.youtube.com/channel/UC5tEUUlx11httS9Y9RvIzJw",
+        "linkedin": "https://www.linkedin.com/company/67972177/",
+        "discord": "https://discord.gg/w5pjfWqdyT"
+      },
+      "matomo": {
+        "eventCategory": "StakingProductCard",
+        "eventAction": "Clicked",
+        "eventName": "Clicked Launchnodes go to link"
+      }
     }
   ],
   "keyGen": [
     {
       "name": "Wagyu Key Gen",
-      "svgPath": "wagyu-glyph.svg",
+      "imageName": "Wagyu",
       "hue": 46,
       "launchDate": "2021-12-01",
       "url": "https://wagyu.gg/",
@@ -242,7 +291,7 @@
       "platforms": ["Linux", "macOS", "Windows"],
       "ui": ["GUI"],
       "socials": {
-        "discord": "https://discord.io/ethstaker",
+        "discord": "https://discord.gg/ethstaker",
         "twitter": "https://twitter.com/wagyutools",
         "github": "https://github.com/stake-house/wagyu-key-gen"
       },
@@ -254,7 +303,7 @@
     },
     {
       "name": "ethdo",
-      "svgPath": "default-open-source-glyph.svg",
+      "imageName": "DefaultOpenSource",
       "hue": 281,
       "launchDate": "2020-12-01",
       "url": "https://github.com/wealdtech/ethdo",
@@ -282,14 +331,11 @@
     },
     {
       "name": "Avado",
-      "svgPath": "avado-glyph.svg",
+      "imageName": "Avado",
       "hue": 239,
       "launchDate": "2018-12-01",
       "url": "https://ava.do/",
       "audits": [],
-      "minEth": 16,
-      "additionalStake": "10",
-      "additionalStakeUnit": "% RPL",
       "isFoss": true,
       "hasBugBounty": false,
       "isTrustless": true,
@@ -311,8 +357,131 @@
   ],
   "saas": [
     {
+      "name": "ChainLabo",
+      "imageName": "ChainLabo",
+      "hue": 248,
+      "launchDate": "2023-04-01",
+      "url": "https://www.chainlabo.com/",
+      "audits": [],
+      "minEth": 32,
+      "additionalStake": null,
+      "additionalStakeUnit": null,
+      "monthlyFee": 200,
+      "monthlyFeeUnit": "CHF",
+      "isFoss": false,
+      "hasBugBounty": false,
+      "isTrustless": true,
+      "isPermissionless": false,
+      "pctMajorityExecutionClient": 100,
+      "pctMajorityConsensusClient": 0,
+      "isSelfCustody": true,
+      "platforms": ["Browser"],
+      "ui": ["GUI"],
+      "socials": {
+        "discord": "https://discord.gg/3xmHwXxk",
+        "twitter": "https://twitter.com/ChainLabo",
+        "github": "https://github.com/ChainLabo",
+        "telegram": "https://web.telegram.org/a/#-1919442359"
+      },
+      "matomo": {
+        "eventCategory": "StakingProductCard",
+        "eventAction": "Clicked",
+        "eventName": "Clicked ChainLabo go to link"
+      }
+    },
+    {
+      "name": "stakefish",
+      "imageName": "Stakefish",
+      "hue": 73,
+      "launchDate": "2020-12-01",
+      "url": "https://stake.fish/ethereum/",
+      "audits": [
+        {
+          "name": "Solidified",
+          "url": "https://github.com/solidified-platform/audits/blob/master/Audit%20Report%20-%20Stakefish%20%5B20.09.2021%5D.pdf"
+        },
+        {
+          "name": "Slither",
+          "url": "https://github.com/crytic/slither"
+        },
+        {
+          "name": "SOC 2 Type II",
+          "url": "https://blog.stake.fish/stakefish-completes-soc-2-type-ii-certification-for-non-custodial-blockchain-staking-services/"
+        }
+      ],
+      "minEth": 32,
+      "additionalStake": null,
+      "additionalStakeUnit": null,
+      "feePercentage": 5,
+      "tokens": [],
+      "isFoss": true,
+      "hasBugBounty": false,
+      "isTrustless": true,
+      "isPermissionless": true,
+      "pctMajorityExecutionClient": null,
+      "pctMajorityConsensusClient": 0,
+      "isSelfCustody": true,
+      "platforms": ["Browser", "Wallet", "Linux", "macOS", "Windows"],
+      "ui": ["GUI"],
+      "socials": {
+        "github": "https://github.com/stakefish",
+        "twitter": "https://twitter.com/stakefish",
+        "telegram": "https://t.me/stakefish",
+        "linkedin": "https://www.linkedin.com/company/14396078",
+        "youtube": "https://www.youtube.com/@stakefish"
+      },
+      "matomo": {
+        "eventCategory": "StakingProductCard",
+        "eventAction": "Clicked",
+        "eventName": "Clicked stakefish go to link"
+      }
+    },
+    {
+      "name": "P2P.org",
+      "imageName": "P2P",
+      "hue": 227,
+      "launchDate": "2023-01-10",
+      "url": "https://p2p.org/networks/ethereum/",
+      "audits": [
+        {
+          "name": "Mixbytes (v1)",
+          "url": "https://github.com/mixbytes/audits_public/blob/79cd8153bfb6098227b43dfba8d061881a94a248/P2P.org/ETH2%20Depositor%20%26%20ETH%20Staking%20Fee%20Distributor%20(v.1)/P2P.org_ETH2%20Depositor%20%26%20ETH%20Staking%20Fee%20Distributor%20Smart%20Contracts%20Audit%20Report.pdf"
+        },
+        {
+          "name": "Mixbytes (v2)",
+          "url": "https://github.com/mixbytes/audits_public/blob/79cd8153bfb6098227b43dfba8d061881a94a248/P2P.org/ETH2%20Depositor%20%26%20ETH%20Staking%20Fee%20Distributor%20(v.2)/ETH2%20Depositor%20%26%20ETH%20Staking%20Fee%20Distributor%20Security%20Audit%20Report%20(v.2).pdf"
+        }
+      ],
+      "minEth": 32,
+      "additionalStake": null,
+      "additionalStakeUnit": null,
+      "monthlyFee": 5,
+      "monthlyFeeUnit": "%",
+      "isFoss": false,
+      "hasBugBounty": false,
+      "isTrustless": true,
+      "isPermissionless": true,
+      "pctMajorityExecutionClient": 50,
+      "pctMajorityConsensusClient": 30,
+      "isSelfCustody": false,
+      "platforms": ["Browser"],
+      "ui": ["GUI"],
+      "socials": {
+        "linkedin": "https://www.linkedin.com/company/p2p-org/",
+        "twitter": "https://twitter.com/P2Pvalidator",
+        "telegram": "https://t.me/P2Pstaking",
+        "github": "https://github.com/p2p-org",
+        "youtube": "https://www.youtube.com/channel/UC9pRzyJx5YrUNfmg1vLZ-bQ/"
+      },
+      "matomo": {
+        "eventCategory": "StakingProductCard",
+        "eventAction": "Clicked",
+        "eventName": "Clicked P2P (saas) go to link"
+      }
+    },
+    {
       "name": "Kiln",
-      "svgPath": "kiln-glyph.svg",
+      "imageName": "Kiln",
       "hue": 20,
       "launchDate": "2021-03-01",
       "url": "https://www.kiln.fi/",
@@ -320,6 +489,10 @@
         {
           "name": "Prescient Assurance",
           "url": "https://drive.google.com/file/d/1K-Q0r2lXqnOePsV3e7c9sErl6iz8EKHX/view"
+        },
+        {
+          "name": "Vanta",
+          "url": "https://security.kiln.fi/documents"
         }
       ],
       "minEth": 32,
@@ -328,10 +501,11 @@
       "monthlyFee": 8,
       "monthlyFeeUnit": "%",
       "isFoss": false,
-      "hasBugBounty": false,
+      "hasBugBounty": true,
       "isTrustless": false,
-      "isPermissionless": false,
-      "pctMajorityClient": null,
+      "isPermissionless": true,
+      "pctMajorityExecutionClient": 49.9,
+      "pctMajorityConsensusClient": 33,
       "isSelfCustody": false,
       "platforms": ["Browser"],
       "ui": ["GUI"],
@@ -348,7 +522,7 @@
     },
     {
       "name": "Allnodes",
-      "svgPath": "allnodes-glyph.svg",
+      "imageName": "Allnodes",
       "hue": 248,
       "launchDate": "2020-12-01",
       "url": "https://www.allnodes.com/eth2/staking",
@@ -362,7 +536,8 @@
       "hasBugBounty": false,
       "isTrustless": false,
       "isPermissionless": false,
-      "pctMajorityClient": null,
+      "pctMajorityExecutionClient": null,
+      "pctMajorityConsensusClient": null,
       "isSelfCustody": true,
       "platforms": ["Browser"],
       "ui": ["GUI"],
@@ -378,44 +553,65 @@
       }
     },
     {
-      "name": "BloxStaking",
-      "svgPath": "bloxstaking-glyph.svg",
-      "hue": 341,
-      "launchDate": "2020-12-08",
-      "url": "https://www.bloxstaking.com/",
-      "audits": [
-        {
-          "name": "CoinFabrik",
-          "url": "https://github.com/bloxapp/ssv-network/blob/main/docs/SSV_Token_Dex%26Vesting_audit.pdf"
-        }
-      ],
+      "name": "Squid",
+      "imageName": "Squid",
+      "hue": 240,
+      "launchDate": "2022-11-01",
+      "url": "https://www.ohsquid.com/",
+      "audits": [],
       "minEth": 32,
       "additionalStake": null,
       "additionalStakeUnit": null,
-      "monthlyFee": null,
-      "monthlyFeeUnit": null,
-      "isFoss": true,
+      "monthlyFee": 12,
+      "monthlyFeeUnit": "USD",
+      "isFoss": false,
       "hasBugBounty": false,
       "isTrustless": false,
       "isPermissionless": false,
-      "pctMajorityClient": 43.8,
+      "pctMajorityExecutionClient": null,
+      "pctMajorityConsensusClient": null,
       "isSelfCustody": true,
-      "platforms": ["Linux", "macOS", "Windows"],
+      "platforms": ["Browser"],
       "ui": ["GUI"],
       "socials": {
-        "discord": "https://discord.gg/AbYHBfjkDY",
-        "twitter": "https://twitter.com/ssv_network",
-        "github": "https://github.com/bloxapp/blox-live"
+        "github": null
       },
       "matomo": {
         "eventCategory": "StakingProductCard",
         "eventAction": "Clicked",
-        "eventName": "Clicked BloxStaking go to link"
+        "eventName": "Clicked Squid go to link"
+      }
+    },
+    {
+      "name": "Ethpool",
+      "imageName": "Ethpool",
+      "hue": 20,
+      "launchDate": "2021-10-20",
+      "url": "https://ethpool.org/",
+      "audits": [],
+      "minEth": 32,
+      "isFoss": false,
+      "hasBugBounty": false,
+      "isTrustless": false,
+      "isPermissionless": false,
+      "pctMajorityExecutionClient": 0,
+      "pctMajorityConsensusClient": 0,
+      "isSelfCustody": true,
+      "platforms": ["Browser"],
+      "ui": ["GUI"],
+      "socials": {
+        "discord": "https://discord.io/ethpool",
+        "twitter": "https://twitter.com/ethpool_staking"
+      },
+      "matomo": {
+        "eventCategory": "StakingProductCard",
+        "eventAction": "Clicked",
+        "eventName": "Clicked Ethpool go to link"
       }
     },
     {
       "name": "Abyss Finance",
-      "svgPath": "abyss-glyph.svg",
+      "imageName": "Abyss",
       "hue": 237,
       "launchDate": "2020-12-01",
       "url": "https://abyss.finance/hosting",
@@ -429,7 +625,8 @@
       "hasBugBounty": false,
       "isTrustless": false,
       "isPermissionless": true,
-      "pctMajorityClient": 3.61,
+      "pctMajorityExecutionClient": null,
+      "pctMajorityConsensusClient": 3.61,
       "isSelfCustody": true,
       "platforms": ["Browser"],
       "ui": ["GUI"],
@@ -443,26 +640,216 @@
         "eventAction": "Clicked",
         "eventName": "Clicked Abyss Finance go to link"
       }
+    },
+    {
+      "name": "Sensei Node",
+      "imageName": "SenseiNode",
+      "hue": 137,
+      "launchDate": "2022-11-01",
+      "url": "https://www.senseinode.com/",
+      "audits": [
+        {
+          "name": "Coinspect",
+          "url": "https://www.coinspect.com/doc/Coinspect%20-%20Smart%20Contract%20Audit%20-%20SenseiStake%20v221028.pdf"
+        }
+      ],
+      "minEth": 32,
+      "monthlyFee": "10",
+      "monthlyFeeUnit": "%",
+      "isFoss": true,
+      "hasBugBounty": false,
+      "isTrustless": false,
+      "isPermissionless": true,
+      "pctMajorityExecutionClient": null,
+      "pctMajorityConsensusClient": null,
+      "isSelfCustody": true,
+      "platforms": ["Browser"],
+      "ui": ["GUI"],
+      "socials": {
+        "twitter": "https://twitter.com/senseinode",
+        "medium": "https://medium.com/@senseinode",
+        "github": "https://github.com/Sensei-Node"
+      },
+      "matomo": {
+        "eventCategory": "StakingProductCard",
+        "eventAction": "Clicked",
+        "eventName": "Clicked Sensei Node go to link"
+      }
+    },
+    {
+      "name": "RockX Staking",
+      "imageName": "RockX",
+      "hue": 224,
+      "launchDate": "2023-05-23",
+      "url": "https://www.rockx.com/staking/ethereum",
+      "audits": [
+        {
+          "name": "PeckShield",
+          "url": "https://github.com/RockX-SG/direct_staking_contracts/blob/main/PeckShield-Audit-Report-RockX-DirectStaking-v1.0.pdf"
+        }
+      ],
+      "minEth": 32,
+      "monthlyFee": "20",
+      "monthlyFeeUnit": "% execution rewards",
+      "isFoss": true,
+      "hasBugBounty": false,
+      "isTrustless": false,
+      "isPermissionless": false,
+      "pctMajorityExecutionClient": 100,
+      "pctMajorityConsensusClient": 0,
+      "isSelfCustody": false,
+      "platforms": ["Browser"],
+      "ui": ["GUI"],
+      "socials": {
+        "discord": "https://discord.gg/YJzs4UwsTp",
+        "twitter": "https://twitter.com/rockx_official",
+        "linkedin": "https://www.linkedin.com/company/rockx-official",
+        "youtube": "https://www.youtube.com/channel/UCur9s16EemOPuY_YAXhtG9A"
+      },
+      "matomo": {
+        "eventCategory": "StakingProductCard",
+        "eventAction": "Clicked",
+        "eventName": "Clicked RockX go to link"
+      }
+    },
+    {
+      "name": "Everstake Institutional",
+      "imageName": "Everstake",
+      "hue": 43,
+      "launchDate": "2023-03-31",
+      "url": "https://eth.everstake.one/",
+      "audits": [
+        {
+          "name": "Blaize",
+          "url": "https://blaize.tech/clients/smart-contract-security-audit-for-everstake/"
+        }
+      ],
+      "minEth": 32,
+      "additionalStake": null,
+      "additionalStakeUnit": null,
+      "monthlyFee": 10,
+      "monthlyFeeUnit": "% rewards",
+      "isFoss": false,
+      "hasBugBounty": false,
+      "isTrustless": true,
+      "isPermissionless": false,
+      "pctMajorityExecutionClient": 100,
+      "pctMajorityConsensusClient": 100,
+      "isSelfCustody": true,
+      "platforms": ["Browser"],
+      "ui": ["GUI"],
+      "socials": {
+        "discord": "https://discord.gg/NvcW47V3Xb",
+        "twitter": "https://twitter.com/everstake_pool",
+        "medium": "https://medium.com/everstake"
+      },
+      "matomo": {
+        "eventCategory": "StakingProductCard",
+        "eventAction": "Clicked",
+        "eventName": "Clicked Everstake Institution go to link"
+      }
+    },
+    {
+      "name": "Figment",
+      "imageName": "Figment",
+      "hue": 52,
+      "launchDate": "2021-12-31",
+      "url": "https://figment.io/",
+      "audits": [],
+      "minEth": 32,
+      "monthlyFee": 30,
+      "monthlyFeeUnit": "% execution rewards",
+      "isFoss": false,
+      "hasBugBounty": false,
+      "isTrustless": false,
+      "isPermissionless": false,
+      "pctMajorityExecutionClient": 50,
+      "pctMajorityConsensusClient": 0,
+      "isSelfCustody": false,
+      "platforms": ["Browser"],
+      "ui": ["GUI"],
+      "socials": {
+        "twitter": "https://twitter.com/Figment_io",
+        "linkedin": "https://www.linkedin.com/company/figment-io"
+      },
+      "matomo": {
+        "eventCategory": "StakingProductCard",
+        "eventAction": "Clicked",
+        "eventName": "Clicked Figment go to link"
+      }
+    },
+    {
+      "name": "Consensys Staking",
+      "imageName": "ConsensysStaking",
+      "hue": 231,
+      "launchDate": "2020-12-01",
+      "url": "https://consensys.io/staking",
+      "audits": [
+        {
+          "name": "SOC2 and Penttests",
+          "url": "https://app.drata.com/trust/9cbca327-0c38-11ee-865f-029d78a187d9"
+        }
+      ],
+      "minEth": 32,
+      "additionalStake": null,
+      "additionalStakeUnit": null,
+      "monthlyFee": 8,
+      "monthlyFeeUnit": "%",
+      "isFoss": false,
+      "hasBugBounty": true,
+      "isTrustless": false,
+      "isPermissionless": false,
+      "pctMajorityExecutionClient": 95,
+      "pctMajorityConsensusClient": 0,
+      "isSelfCustody": false,
+      "platforms": ["macOS", "Windows"],
+      "ui": ["GUI", "API"],
+      "socials": {},
+      "matomo": {
+        "eventCategory": "StakingProductCard",
+        "eventAction": "Clicked",
+        "eventName": "Clicked ConsensysStaking go to link"
+      }
     }
   ],
   "pools": [
     {
       "name": "Rocket Pool",
-      "svgPath": "rocket-pool-glyph.svg",
+      "imageName": "RocketPool",
       "hue": 14,
       "launchDate": "2021-11-08",
       "url": "https://rocketpool.net/",
       "audits": [
         {
-          "name": "Sigma Prime",
+          "name": "Sigma Prime - May 2021",
           "url": "https://rocketpool.net/files/sigma-prime-audit.pdf"
         },
         {
-          "name": "Consensys Diligence",
+          "name": "Sigma Prime - Nov 2021",
+          "url": "https://rocketpool.net/files/sigma-prime-fix-review.pdf"
+        },
+        {
+          "name": "Sigma Prime - Redstone, June 2022",
+          "url": "https://rocketpool.net/files/sigma-prime-audit-redstone.pdf"
+        },
+        {
+          "name": "Sigma Prime - Atlas, Dec 2022",
+          "url": "https://rocketpool.net/files/sigma-prime-atlas-v1.2.pdf"
+        },
+        {
+          "name": "Consensys Diligence - 2021",
           "url": "https://consensys.net/diligence/audits/2021/04/rocketpool/"
         },
         {
-          "name": "Trail of Bits",
+          "name": "Consensys Diligence - Redstone, June 2022",
+          "url": "https://rocketpool.net/files/consensys-audit-redstone.pdf"
+        },
+        {
+          "name": "Consensys Diligence - Atlas, Jan 2023",
+          "url": "https://rocketpool.net/files/consensys-diligence-atlas-v1.2.pdf"
+        },
+        {
+          "name": "Trail of Bits - Sept 2021",
           "url": "https://github.com/trailofbits/publications/blob/master/reviews/RocketPool.pdf"
         }
       ],
@@ -479,7 +866,8 @@
       "hasBugBounty": true,
       "isTrustless": true,
       "hasPermissionlessNodes": true,
-      "pctMajorityClient": 10.67,
+      "pctMajorityExecutionClient": null,
+      "pctMajorityConsensusClient": 10.67,
       "platforms": ["Browser"],
       "ui": ["GUI"],
       "socials": {
@@ -495,7 +883,7 @@
     },
     {
       "name": "Lido",
-      "svgPath": "lido-glyph.svg",
+      "imageName": "Lido",
       "hue": 210,
       "launchDate": "2020-12-17",
       "url": "https://lido.fi/",
@@ -524,9 +912,10 @@
       ],
       "isFoss": true,
       "hasBugBounty": true,
-      "isTrustless": false,
+      "isTrustless": true,
       "hasPermissionlessNodes": false,
-      "pctMajorityClient": 42.83,
+      "pctMajorityExecutionClient": null,
+      "pctMajorityConsensusClient": 42.83,
       "platforms": ["Browser", "Wallet"],
       "ui": ["GUI"],
       "socials": {
@@ -544,7 +933,7 @@
     },
     {
       "name": "StakeWise",
-      "svgPath": "stakewise-glyph.svg",
+      "imageName": "Stakewise",
       "hue": 220,
       "launchDate": "2021-02-01",
       "url": "https://app.stakewise.io/",
@@ -587,13 +976,15 @@
       "isFoss": true,
       "hasBugBounty": true,
       "isTrustless": true,
-      "hasPermissionlessNodes": false,
-      "pctMajorityClient": 43.1,
+      "hasPermissionlessNodes": true,
+      "pctMajorityExecutionClient": null,
+      "pctMajorityConsensusClient": 43.1,
       "platforms": ["Browser"],
       "ui": ["GUI"],
       "socials": {
         "discord": "https://discord.com/invite/2BSdr2g",
         "twitter": "https://twitter.com/stakewise_io",
+        "telegram": "https://t.me/stakewise_io",
         "github": "https://github.com/stakewise"
       },
       "matomo": {
@@ -603,41 +994,8 @@
       }
     },
     {
-      "name": "stakefish",
-      "svgPath": "stakefish-glyph.svg",
-      "hue": 73,
-      "launchDate": "2020-12-01",
-      "url": "https://stake.fish/ethereum-shared/",
-      "audits": [
-        {
-          "name": "Solidified",
-          "url": "https://github.com/solidified-platform/audits/blob/master/Audit%20Report%20-%20Stakefish%20%5B20.09.2021%5D.pdf"
-        }
-      ],
-      "minEth": 0.1,
-      "feePercentage": 10,
-      "tokens": [],
-      "isFoss": false,
-      "hasBugBounty": false,
-      "isTrustless": true,
-      "hasPermissionlessNodes": false,
-      "pctMajorityClient": 0.0,
-      "platforms": ["Browser", "Wallet"],
-      "ui": ["GUI"],
-      "twitter": "https://twitter.com/stakefish",
-      "telegram": "https://t.me/stakefish",
-      "socials": {
-        "github": null
-      },
-      "matomo": {
-        "eventCategory": "StakingProductCard",
-        "eventAction": "Clicked",
-        "eventName": "Clicked stakefish go to link"
-      }
-    },
-    {
       "name": "Ankr Staking",
-      "svgPath": "ankr-glyph.svg",
+      "imageName": "Ankr",
       "hue": 221,
       "launchDate": "2020-11-20",
       "url": "https://stakefi.ankr.com/liquid-staking",
@@ -669,7 +1027,8 @@
       "hasBugBounty": true,
       "isTrustless": false,
       "hasPermissionlessNodes": false,
-      "pctMajorityClient": 67.94,
+      "pctMajorityExecutionClient": null,
+      "pctMajorityConsensusClient": 67.94,
       "platforms": ["Browser", "Wallet"],
       "ui": ["GUI"],
       "socials": {
@@ -685,7 +1044,7 @@
     },
     {
       "name": "StaFi",
-      "svgPath": "stafi-glyph.svg",
+      "imageName": "Stafi",
       "hue": 155,
       "launchDate": "2020-10-16",
       "url": "https://stafi.io",
@@ -708,7 +1067,8 @@
       "hasBugBounty": false,
       "isTrustless": false,
       "hasPermissionlessNodes": true,
-      "pctMajorityClient": null,
+      "pctMajorityExecutionClient": null,
+      "pctMajorityConsensusClient": null,
       "platforms": ["Browser"],
       "ui": ["GUI"],
       "socials": {
@@ -721,6 +1081,134 @@
         "eventCategory": "StakingProductCard",
         "eventAction": "Clicked",
         "eventName": "Clicked StaFi go to link"
+      }
+    },
+    {
+      "name": "Bedrock",
+      "imageName": "Bedrock",
+      "hue": 224,
+      "launchDate": "2022-09-29",
+      "url": "https://bedrock.rockx.com/",
+      "audits": [
+        {
+          "name": "PeckSheild",
+          "url": "https://github.com/RockX-SG/stake/blob/main/PeckShield-Audit-Report-RockXStaking-v1.0.pdf"
+        }
+      ],
+      "minEth": 0,
+      "feePercentage": 10,
+      "tokens": [
+        {
+          "name": "Universal ETH",
+          "symbol": "uniETH",
+          "address": "0xF1376bceF0f78459C0Ed0ba5ddce976F1ddF51F4"
+        }
+      ],
+      "isFoss": true,
+      "hasBugBounty": false,
+      "isTrustless": true,
+      "hasPermissionlessNodes": false,
+      "pctMajorityExecutionClient": null,
+      "pctMajorityConsensusClient": 100,
+      "platforms": ["Browser"],
+      "ui": ["GUI"],
+      "socials": {
+        "discord": "https://discord.gg/YJzs4UwsTp",
+        "twitter": "ttps://twitter.com/rockx_official",
+        "github": "https://github.com/RockX-SG/stake",
+        "linkedin": "https://www.linkedin.com/company/rockx-official",
+        "youtube": "https://www.youtube.com/@rockx_official"
+      },
+      "matomo": {
+        "eventCategory": "StakingProductCard",
+        "eventAction": "Clicked",
+        "eventName": "Clicked Bedrock go to link"
+      }
+    },
+    {
+      "name": "Origin Ether",
+      "imageName": "OriginEther",
+      "hue": 211,
+      "launchDate": "2023-05-16",
+      "url": "https://originprotocol.eth.limo/",
+      "audits": [
+        {
+          "name": "OpenZeppelin - Origin SSV Native Staking - June 2024",
+          "url": "https://github.com/OriginProtocol/security/blob/master/audits/OpenZeppelin%20-%20Origin%20SSV%20Native%20Staking%20-%20June%202024.pdf"
+        },
+        {
+          "name": "Audit List",
+          "url": "https://docs.originprotocol.com/security-and-risk/audits"
+        }
+      ],
+      "minEth": 0,
+      "feePercentage": 20,
+      "tokens": [
+        {
+          "name": "Origin Ether",
+          "symbol": "OETH",
+          "address": "0x856c4efb76c1d1ae02e20ceb03a2a6a08b0b8dc3"
+        }
+      ],
+      "isFoss": true,
+      "hasBugBounty": true,
+      "isTrustless": true,
+      "hasPermissionlessNodes": false,
+      "pctMajorityExecutionClient": 50,
+      "pctMajorityConsensusClient": 50,
+      "platforms": ["Browser"],
+      "ui": ["GUI"],
+      "socials": {
+        "telegram": "https://t.me/originprotocol",
+        "reddit": "https://www.reddit.com/r/originprotocol/",
+        "twitter": "https://twitter.com/OriginProtocol",
+        "discord": "https://discord.com/invite/ogn",
+        "github": "https://github.com/originprotocol",
+        "youtube": "https://www.youtube.com/c/originprotocol",
+        "linkedin": "https://www.linkedin.com/company/originprotocol/"
+      },
+      "matomo": {
+        "eventCategory": "StakingProductCard",
+        "eventAction": "Clicked",
+        "eventName": "Clicked Origin Ether go to link"
+      }
+    },
+    {
+      "name": "Everstake",
+      "imageName": "Everstake",
+      "hue": 43,
+      "launchDate": "2023-09-14",
+      "url": "https://stake.everstake.one/ethereum/",
+      "audits": [
+        {
+          "name": "ChainSecurity 2023",
+          "url": "https://chainsecurity.com/security-audit/everstake-eth-b2c-staking/"
+        },
+        {
+          "name": "Ackee 2023",
+          "url": "https://ackeeblockchain.com/blog/everstake-ethereum-staking-protocol-audit-summary/"
+        }
+      ],
+      "minEth": 0.1,
+      "feePercentage": 10,
+      "tokens": [],
+      "isFoss": false,
+      "hasBugBounty": false,
+      "isTrustless": true,
+      "hasPermissionlessNodes": false,
+      "pctMajorityExecutionClient": 50,
+      "pctMajorityConsensusClient": 50,
+      "platforms": ["Browser", "Wallet"],
+      "ui": ["GUI"],
+      "socials": {
+        "discord": "https://discord.gg/NvcW47V3Xb",
+        "twitter": "https://twitter.com/everstake_pool",
+        "medium": "https://medium.com/everstake"
+      },
+      "matomo": {
+        "eventCategory": "StakingProductCard",
+        "eventAction": "Clicked",
+        "eventName": "Clicked Everstake (pool) go to link"
       }
     }
   ]

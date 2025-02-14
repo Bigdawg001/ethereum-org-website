@@ -1,95 +1,47 @@
-import React, { useState, useContext } from "react"
-import styled from "@emotion/styled"
-import { useTheme } from "@emotion/react"
+import React, { useState } from "react"
+import { useTranslation } from "next-i18next"
 import Highlight, {
   defaultProps,
   Language,
   PrismTheme,
 } from "prism-react-renderer"
-import Translation from "./Translation"
-import CopyToClipboard from "./CopyToClipboard"
-import Emoji from "./OldEmoji"
+import Prism from "prism-react-renderer/prism"
 
-const LINES_BEFORE_COLLAPSABLE = 8
+// https://github.com/FormidableLabs/prism-react-renderer/tree/master#custom-language-support
+import CopyToClipboard from "@/components/CopyToClipboard"
+import Emoji from "@/components/Emoji"
+import { Flex } from "@/components/ui/flex"
 
-const Container = styled.div`
-  position: relative;
-  /* Overwrites codeblocks inheriting RTL styling in Farsi/Arabic */
-  /* Context: https://github.com/ethereum/ethereum-org-website/issues/6202 */
-  direction: ltr;
-`
+import { cn } from "@/lib/utils/cn"
 
-const HightlightContainer = styled.div<{
-  fromHomepage: boolean
-  isCollapsed: boolean
-}>`
-  border-radius: 4px;
-  border: ${({ fromHomepage, theme }) =>
-    fromHomepage ? `none` : `1px solid ${theme.colors.border}`};
-  width: 100%;
-  max-height: ${({ isCollapsed }) =>
-    isCollapsed
-      ? `calc((1.2rem * ${LINES_BEFORE_COLLAPSABLE}) + 4.185rem)`
-      : "fit-content"};
-  overflow: scroll;
-  margin-bottom: ${(props) => (props.fromHomepage ? `0rem` : `1rem`)};
-`
+import { LINES_BEFORE_COLLAPSABLE } from "@/lib/constants"
 
-const StyledPre = styled.pre<{
-  hasTopBar: boolean
-}>`
-  padding-top: ${({ hasTopBar }) => (hasTopBar ? "2.75rem" : "1.5rem")};
-  margin: 0;
-  padding-left: 1rem;
-  overflow: visible;
-  min-width: 100%;
-  width: fit-content;
-`
+import useColorModeValue from "@/hooks/useColorModeValue"
+;(typeof global !== "undefined" ? global : window).Prism = Prism
+require("prismjs/components/prism-solidity")
 
-const Line = styled.div`
-  display: table-row;
-`
-
-const LineNo = styled.span`
-  display: table-cell;
-  text-align: right;
-  padding-right: 2rem;
-  user-select: none;
-  opacity: 0.4;
-`
-
-const LineContent = styled.span`
-  display: table-cell;
-`
-
-const TopBar = styled.div`
-  display: flex;
-  justify-content: flex-end;
-  position: absolute;
-  top: 0.75rem;
-  right: 1rem;
-`
-
-const TopBarItem = styled.div`
-  border: 1px solid ${(props) => props.theme.colors.searchBorder};
-  border-radius: 4px;
-  background: ${({ theme }) => (theme.isDark ? "#363641" : "#f7f7f7")};
-  margin-left: 0.5rem;
-  padding: 0.25rem 0.5rem;
-
-  &:hover {
-    cursor: pointer;
-    color: ${(props) => props.theme.colors.text100};
-    transform: scale(1.04);
-    box-shadow: 1px 1px 8px 1px rgba(0, 0, 0, 0.5);
-  }
-`
+const TopBarItem = ({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) => {
+  return (
+    <div
+      className={cn(
+        "ms-2 rounded border px-2 py-1 shadow-[1px_1px_8px_1px_rgba(var(--black),_0.5)] transition-transform duration-100",
+        "hover:scale-105 hover:cursor-pointer hover:bg-gray-200 hover:shadow-md hover:transition-transform hover:duration-100",
+        "bg-background-highlight hover:bg-background",
+        className
+      )}
+      {...props}
+    />
+  )
+}
 
 const codeTheme = {
   light: {
     plain: {
-      backgroundColor: "#fafafa",
-      color: "#333333",
+      backgroundColor: "#f7f7f7", // background-highlight (gray-50)
+      color: "#6C24DF", // primary (purple-600)
     },
     styles: [
       {
@@ -160,8 +112,8 @@ const codeTheme = {
   dark: {
     // Pulled from `defaultProps.theme` for potential customization
     plain: {
-      backgroundColor: "#2a2734",
-      color: "#9a86fd",
+      backgroundColor: "#121212", // background-highlight (gray-900)
+      color: "#B38DF0", // primary (purple-400)
     },
     styles: [
       {
@@ -250,47 +202,61 @@ const getValidChildrenForCodeblock = (child) => {
   }
 }
 
-export interface IProps {
+export type CodeblockProps = React.HTMLAttributes<HTMLDivElement> & {
   allowCollapse?: boolean
   codeLanguage: string
   fromHomepage?: boolean
-  children: React.ReactChild
 }
 
-const Codeblock: React.FC<IProps> = ({
+const Codeblock = ({
   children,
   allowCollapse = true,
   codeLanguage,
   fromHomepage = false,
-}) => {
-  const codeText = React.Children.map(children, (child) => {
-    return getValidChildrenForCodeblock(child)
-  }).join("")
+  className,
+}: CodeblockProps) => {
+  const { t } = useTranslation("common")
+  const selectedTheme = useColorModeValue(codeTheme.light, codeTheme.dark)
+
+  const codeText = React.Children.toArray(children)
+    .map((child) => {
+      if (!child) return
+      return getValidChildrenForCodeblock(child)
+    })
+    .join("")
 
   const [isCollapsed, setIsCollapsed] = useState(allowCollapse)
 
-  let className
+  let langClass: string
   if (React.isValidElement(children)) {
-    className = children?.props?.className
+    langClass = children?.props?.className
   } else {
-    className = codeLanguage || ""
+    langClass = codeLanguage || ""
   }
 
-  const matches = className?.match(/language-(?<lang>.*)/)
-  const language = matches?.groups?.lang || ""
+  const matches = langClass?.match(/language-(.*)/)
+  const language = matches?.[1] || ""
 
   const shouldShowCopyWidget = ["js", "json", "python", "solidity"].includes(
     language
   )
   const shouldShowLineNumbers = language !== "bash"
   const totalLines = codeText.split("\n").length
-  const theme = useTheme()
-  const selectedTheme = theme.isDark ? codeTheme.dark : codeTheme.light
+
+  const hasTopBar =
+    shouldShowCopyWidget || totalLines - 1 > LINES_BEFORE_COLLAPSABLE
+
   return (
-    <Container>
-      <HightlightContainer
-        isCollapsed={isCollapsed}
-        fromHomepage={fromHomepage}
+    /* Overwrites codeblocks inheriting RTL styling in Right-To-Left script languages (e.g. Arabic) */
+    /* Context: https://github.com/ethereum/ethereum-org-website/issues/6202 */
+    <div className={cn("relative", className)} dir="ltr">
+      <div
+        className="overflow-scroll rounded"
+        style={{
+          maxHeight: isCollapsed
+            ? `calc((1.2rem * ${LINES_BEFORE_COLLAPSABLE}) + 4.185rem)`
+            : "none",
+        }}
       >
         <Highlight
           {...defaultProps}
@@ -299,37 +265,43 @@ const Codeblock: React.FC<IProps> = ({
           theme={selectedTheme as PrismTheme}
         >
           {({ className, style, tokens, getLineProps, getTokenProps }) => (
-            <StyledPre
+            <pre
+              className={cn(
+                "m-0 w-fit min-w-full overflow-visible py-6 ps-4",
+                hasTopBar && "pt-[2.75rem]",
+                className
+              )}
               style={style}
-              className={className}
-              hasTopBar={
-                shouldShowCopyWidget ||
-                totalLines - 1 > LINES_BEFORE_COLLAPSABLE
-              }
             >
               {tokens.map((line, i) => {
                 return i === tokens.length - 1 &&
                   line[0].content === "" ? null : (
-                  <Line key={i} {...getLineProps({ line, key: i })}>
-                    {shouldShowLineNumbers && <LineNo>{i + 1}</LineNo>}
-                    <LineContent>
+                  <div
+                    key={i}
+                    style={{ display: "table-row" }}
+                    {...getLineProps({ line, key: i })}
+                  >
+                    {shouldShowLineNumbers && (
+                      <span className="table-cell select-none pe-8 text-end opacity-40">
+                        {i + 1}
+                      </span>
+                    )}
+                    <span className="table-cell">
                       {line.map((token, key) => (
                         <span key={key} {...getTokenProps({ token, key })} />
                       ))}
-                    </LineContent>
-                  </Line>
+                    </span>
+                  </div>
                 )
               })}
               {!fromHomepage && (
-                <TopBar className={className}>
+                <Flex
+                  className={cn("absolute end-4 top-3 justify-end", className)}
+                >
                   {allowCollapse &&
                     totalLines - 1 > LINES_BEFORE_COLLAPSABLE && (
                       <TopBarItem onClick={() => setIsCollapsed(!isCollapsed)}>
-                        {isCollapsed ? (
-                          <Translation id="show-all" />
-                        ) : (
-                          <Translation id="show-less" />
-                        )}
+                        {isCollapsed ? t("show-all") : t("show-less")}
                       </TopBarItem>
                     )}
                   {shouldShowCopyWidget && (
@@ -338,26 +310,29 @@ const Codeblock: React.FC<IProps> = ({
                         <TopBarItem>
                           {!isCopied ? (
                             <>
-                              <Emoji text=":clipboard:" size={1} />{" "}
-                              <Translation id="copy" />
+                              <Emoji text=":clipboard:" className="text-md" />{" "}
+                              {t("copy")}
                             </>
                           ) : (
                             <>
-                              <Emoji text=":white_check_mark:" size={1} />{" "}
-                              <Translation id="copied" />
+                              <Emoji
+                                text=":white_check_mark:"
+                                className="text-md"
+                              />{" "}
+                              {t("copied")}
                             </>
                           )}
                         </TopBarItem>
                       )}
                     </CopyToClipboard>
                   )}
-                </TopBar>
+                </Flex>
               )}
-            </StyledPre>
+            </pre>
           )}
         </Highlight>
-      </HightlightContainer>
-    </Container>
+      </div>
+    </div>
   )
 }
 

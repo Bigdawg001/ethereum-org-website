@@ -1,40 +1,31 @@
 import React from "react"
-import { Box } from "@chakra-ui/react"
 
-export interface IProps {
-  children?: React.ReactNode
-  className?: string
+import { cn } from "@/lib/utils/cn"
+
+import { Card } from "./ui/card"
+
+interface GhostCardProps extends React.HTMLAttributes<HTMLDivElement> {
+  children: React.ReactNode
 }
 
-const GhostCard: React.FC<IProps> = ({ children, className }) => (
-  <Box position="relative" mt="2" alignSelf="stretch" className={className}>
-    <Box
-      zIndex="hide"
-      position="absolute"
-      backgroundColor="ghostCardGhost"
-      bottom="2"
-      left="2"
-      border="1px solid"
-      borderColor="border"
-      borderRadius="2px"
-      height="full"
-      width="full"
-    />
-    <Box
-      className="ghost-card-base"
-      height="full"
-      width="full"
-      borderRadius="2px"
-      zIndex={2}
-      padding="6"
-      background="ghostCardBackground"
-      border="1px solid"
-      borderColor="border"
-      textAlign="left"
-    >
-      {children}
-    </Box>
-  </Box>
-)
+const GhostCard: React.FC<GhostCardProps> = ({
+  children,
+  className,
+  ...props
+}) => {
+  return (
+    <div className={cn("relative self-stretch", className)}>
+      <div className="absolute bottom-2 left-2 z-hide h-full w-full rounded-sm border-border-high-contrast bg-background-medium" />
+      <Card
+        className={cn(
+          "text-card-foreground z-10 h-full w-full rounded-sm border bg-background-highlight p-6 text-left"
+        )}
+        {...props}
+      >
+        {children}
+      </Card>
+    </div>
+  )
+}
 
 export default GhostCard

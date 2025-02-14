@@ -1,90 +1,41 @@
-import React from "react"
-import { Link as GatsbyLink } from "gatsby"
-import { SystemStyleObject, cssVar } from "@chakra-ui/react"
-import CustomLink from "../Link"
-import { getCustomId, Item, trimmedTitle } from "./utils"
+import type { ToCItem } from "@/lib/types"
 
-export interface IPropsTableOfContentsLink {
+import { cn } from "@/lib/utils/cn"
+
+import { BaseLink } from "../ui/Link"
+
+export type TableOfContentsLinkProps = {
   depth: number
-  item: Item
+  item: ToCItem
   activeHash?: string
 }
 
-const Link: React.FC<IPropsTableOfContentsLink> = ({
+const Link = ({
   depth,
-  item,
+  item: { title, url },
   activeHash,
-}) => {
-  const url = `#${getCustomId(item.title)}`
-
+}: TableOfContentsLinkProps) => {
   const isActive = activeHash === url
-  const isNested = depth === 2
-
-  let classes = ""
-  if (isActive) {
-    classes += " active"
-  }
-  if (isNested) {
-    classes += " nested"
-  }
-
-  const $dotBg = cssVar("dot-bg")
-
-  const hoverOrActiveStyle: SystemStyleObject = {
-    color: "primary",
-    _after: {
-      content: `""`,
-      background: $dotBg.reference,
-      border: "1px",
-      borderColor: "primary",
-      borderRadius: "50%",
-      boxSize: 2,
-      position: "absolute",
-      left: "-1.29rem",
-      top: "50%",
-      mt: -1,
-    },
-  }
 
   return (
-    <CustomLink
-      as={GatsbyLink}
-      to={url}
-      className={classes}
-      textDecoration="none"
-      display="inline-block"
-      position="relative"
-      color="textTableOfContents"
-      mb="0.5rem !important"
-      width={{ base: "100%", lg: "auto" }}
-      _hover={{
-        ...hoverOrActiveStyle,
-      }}
-      sx={{
-        [$dotBg.variable]: "colors.background",
-        "&.active": {
-          [$dotBg.variable]: "colors.primary",
-          ...hoverOrActiveStyle,
-        },
-        "&.nested": {
-          _before: {
-            content: `"⌞"`,
-            opacity: 0.5,
-            display: "inline-flex",
-            position: "absolute",
-            left: -3.5,
-            top: -1,
-          },
-          "&.active, &:hover": {
-            _after: {
-              left: "-2.29rem",
-            },
-          },
-        },
-      }}
+    <BaseLink
+      href={url}
+      className={cn(
+        "group relative inline-block w-full p-2 ps-0 text-body-medium no-underline lg:w-auto",
+        isActive && "visited"
+      )}
     >
-      {trimmedTitle(item.title)}
-    </CustomLink>
+      <div
+        className={cn(
+          "absolute top-1/2 -mt-1 hidden h-2 w-2 rounded-full border border-primary-hover bg-background group-hover:inline-block",
+          isActive && "inline-block"
+        )}
+        style={{
+          insetInlineStart: `calc(-16px - 8px * ${depth} - 4px - 1px)`,
+        }}
+      />
+      {title}
+    </BaseLink>
   )
 }
 

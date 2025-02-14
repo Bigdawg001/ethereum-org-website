@@ -1,22 +1,16 @@
-import React from "react"
-import {
-  Heading,
-  ListItem,
-  Tab,
-  TabList,
-  TabPanel,
-  TabPanels,
-  Tabs,
-  Text,
-  UnorderedList,
-} from "@chakra-ui/react"
-import WithdrawalCredentials from "./WithdrawalCredentials"
-import ButtonLink from "../ButtonLink"
-import Translation from "../Translation"
-import { trackCustomEvent } from "../../utils/matomo"
+import { useTranslation } from "next-i18next"
 
-interface IProps {}
-const WithdrawalsTabComparison: React.FC<IProps> = () => {
+import WithdrawalCredentials from "@/components/Staking/WithdrawalCredentials"
+import Translation from "@/components/Translation"
+import { ListItem, UnorderedList } from "@/components/ui/list"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+
+import { trackCustomEvent } from "@/lib/utils/matomo"
+
+import { ButtonLink } from "../ui/buttons/Button"
+
+const WithdrawalsTabComparison = () => {
+  const { t } = useTranslation("page-staking")
   const handleMatomoEvent = (name: string): void => {
     trackCustomEvent({
       eventCategory: `Staker tabs`,
@@ -24,57 +18,55 @@ const WithdrawalsTabComparison: React.FC<IProps> = () => {
       eventName: `click`,
     })
   }
+
   return (
-    <Tabs>
-      <TabList>
-        <Tab onClick={() => handleMatomoEvent("Current stakers")}>
-          <Translation id="comp-withdrawal-comparison-current-title" />
-        </Tab>
-        <Tab onClick={() => handleMatomoEvent("New stakers")}>
-          <Translation id="comp-withdrawal-comparison-new-title" />
-        </Tab>
-      </TabList>
+    <Tabs defaultValue="current">
+      <TabsList className="p-0">
+        <TabsTrigger
+          value="current"
+          onClick={() => handleMatomoEvent("Current stakers")}
+        >
+          {t("comp-withdrawal-comparison-current-title")}
+        </TabsTrigger>
+        <TabsTrigger
+          value="new"
+          onClick={() => handleMatomoEvent("New stakers")}
+        >
+          {t("comp-withdrawal-comparison-new-title")}
+        </TabsTrigger>
+      </TabsList>
 
-      <TabPanels>
-        <TabPanel>
-          <Heading as="h3">
-            <Translation id="comp-withdrawal-comparison-current-title" />
-          </Heading>
-          <UnorderedList>
-            <ListItem>
-              <Translation id="comp-withdrawal-comparison-current-li-1" />
-            </ListItem>
-            <ListItem>
-              <Translation id="comp-withdrawal-comparison-current-li-2" />
-            </ListItem>
-          </UnorderedList>
-          <Text fontWeight="bold">
-            <Translation id="comp-withdrawal-comparison-current-p" />
-          </Text>
+      <TabsContent
+        value="current"
+        className="space-y-4 bg-background-highlight"
+      >
+        <h3>{t("comp-withdrawal-comparison-current-title")}</h3>
+        <UnorderedList>
+          <ListItem>
+            <Translation id="page-staking:comp-withdrawal-comparison-current-li-1" />{" "}
+          </ListItem>
+          <ListItem>
+            <Translation id="page-staking:comp-withdrawal-comparison-current-li-2" />
+          </ListItem>
+        </UnorderedList>
+        <p className="font-bold">
+          <Translation id="page-staking:comp-withdrawal-comparison-current-p" />
+        </p>
 
-          <WithdrawalCredentials />
-        </TabPanel>
+        <WithdrawalCredentials />
+      </TabsContent>
 
-        <TabPanel>
-          <Heading as="h3">
-            <Translation id="comp-withdrawal-comparison-new-title" />
-          </Heading>
-          <UnorderedList>
-            <ListItem>
-              <Translation id="comp-withdrawal-comparison-new-li-1" />
-            </ListItem>
-            <ListItem>
-              <Translation id="comp-withdrawal-comparison-new-li-2" />
-            </ListItem>
-          </UnorderedList>
-          <Text fontWeight="bold">
-            <Translation id="comp-withdrawal-comparison-new-p" />
-          </Text>
-          <ButtonLink to="https://launchpad.ethereum.org/" hideArrow>
-            <Translation id="comp-withdrawal-comparison-new-link" />
-          </ButtonLink>
-        </TabPanel>
-      </TabPanels>
+      <TabsContent value="new" className="space-y-4 bg-background-highlight">
+        <h3>{t("comp-withdrawal-comparison-new-title")}</h3>
+        <UnorderedList>
+          <ListItem>{t("comp-withdrawal-comparison-new-li-1")}</ListItem>
+          <ListItem>{t("comp-withdrawal-comparison-new-li-2")}</ListItem>
+        </UnorderedList>
+        <p className="font-bold">{t("comp-withdrawal-comparison-new-p")}</p>
+        <ButtonLink href="https://launchpad.ethereum.org/" hideArrow>
+          {t("comp-withdrawal-comparison-new-link")}
+        </ButtonLink>
+      </TabsContent>
     </Tabs>
   )
 }

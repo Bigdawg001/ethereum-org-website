@@ -7,9 +7,8 @@ import {
   SystemStyleObject,
 } from "@chakra-ui/react"
 
-export interface IProps {
+export type OrderedListProps = {
   listData: Array<React.ReactNode>
-  className?: string
 }
 
 /**
@@ -18,12 +17,11 @@ export interface IProps {
 const liCustomType: SystemStyleObject = {
   content: `counter(li-counter)`,
   position: "absolute",
-  top: "-2px", // adjusts circle + number up and down
-  left: "-3rem",
-  width: "35px",
-  aspectRatio: "1",
-  height: "2rem",
-  pt: "7px", // adjusts number up and down,
+  top: "-3px", // adjusts circle + number up and down
+  insetInlineStart: "-3rem",
+  width: "34px",
+  height: "1.6rem",
+  pt: "9px", // adjusts number up and down,
   lineHeight: "100%",
   borderRadius: "50%",
   background: "grayBackground",
@@ -32,12 +30,12 @@ const liCustomType: SystemStyleObject = {
 
 // `listData` should be a list of strings, or HTML components
 // ex: [<p>string<p>] or ['string']
-const OrderedList: React.FC<IProps> = ({ listData, className }) => {
+const OrderedList = ({ listData }: OrderedListProps) => {
   return (
-    <Box mb="1.45rem" className={className}>
+    <Box mb="1.45rem">
       <ChakraOrderedList
         styleType="none"
-        pl={8}
+        ps={8}
         mb="0"
         ms="1.45rem"
         sx={{

@@ -1,15 +1,16 @@
-// Libraries
-import React, { ReactNode } from "react"
-import { graphql, PageProps } from "gatsby"
-import { GatsbyImage } from "gatsby-plugin-image"
-import { useTranslation } from "gatsby-plugin-react-i18next"
-import styled from "@emotion/styled"
-import { type Icon as ChakraIcon } from "@chakra-ui/react"
+import { HTMLAttributes } from "react"
+import type { GetStaticProps } from "next/types"
+import { useTranslation } from "next-i18next"
+import { serverSideTranslations } from "next-i18next/serverSideTranslations"
+import type { ReactNode } from "react"
+import { FaDiscord } from "react-icons/fa"
 
-// Assets
-import Dappnode from "../assets/run-a-node/dappnode.svg"
-import Dapptap from "../assets/run-a-node/dapptap.svg"
-import Terminal from "../assets/run-a-node/terminal.svg"
+import type { BasePageProps, ChildOnlyProp, Lang } from "@/lib/types"
+
+import Emoji from "@/components/Emoji"
+import ExpandableCard from "@/components/ExpandableCard"
+import FeedbackCard from "@/components/FeedbackCard"
+import type { IconBaseType } from "@/components/icons/icon-base"
 import {
   DecentralizationGlyphIcon,
   DownloadGlyphIcon,
@@ -19,406 +20,237 @@ import {
   PrivacyGlyphIcon,
   SovereigntyGlyphIcon,
   VoteGlyphIcon,
-} from "../components/icons/run-a-node"
+} from "@/components/icons/run-a-node"
+import { TwImage } from "@/components/Image"
+import MainArticle from "@/components/MainArticle"
+import PageHero from "@/components/PageHero"
+import PageMetadata from "@/components/PageMetadata"
+import { StandaloneQuizWidget as QuizWidget } from "@/components/Quiz/QuizWidget"
+import Translation from "@/components/Translation"
+import { Button, ButtonLink } from "@/components/ui/buttons/Button"
+import { Divider } from "@/components/ui/divider"
+import { Center, Flex, Stack, VStack } from "@/components/ui/flex"
+import InlineLink from "@/components/ui/Link"
 
-// Components
-import PageHero from "../components/PageHero"
-import PageMetadata from "../components/PageMetadata"
-import Translation from "../components/Translation"
-import {
-  Content,
-  Divider,
-  Page,
-  InfoGrid,
-  Width60,
-  Width40,
-} from "../components/SharedStyledComponents"
-import ExpandableCard from "../components/ExpandableCard"
-import ExpandableInfo from "../components/ExpandableInfo"
-import Emoji from "../components/OldEmoji"
-import Link from "../components/Link"
-import ButtonLink from "../components/ButtonLink"
-import FeedbackCard from "../components/FeedbackCard"
-import Icon from "../components/Icon"
+import { cn } from "@/lib/utils/cn"
+import { existsNamespace } from "@/lib/utils/existsNamespace"
+import { getLastDeployDate } from "@/lib/utils/getLastDeployDate"
+import { getLocaleTimestamp } from "@/lib/utils/time"
+import { getRequiredNamespacesForPage } from "@/lib/utils/translations"
 
-// Utils
-import { TranslationKey } from "../utils/translations"
-import { scrollIntoView } from "../utils/scrollIntoView"
-import { getImage } from "../utils/image"
+import { InfoGrid } from "@/layouts/md/Staking"
+import community from "@/public/images/enterprise-eth.png"
+import hackathon from "@/public/images/hackathon_transparent.png"
+import impact from "@/public/images/impact_transparent.png"
+import Dappnode from "@/public/images/run-a-node/dappnode.svg"
+import Dapptap from "@/public/images/run-a-node/dapptap.svg"
+import ethereumInside from "@/public/images/run-a-node/ethereum-inside.png"
+import Terminal from "@/public/images/run-a-node/terminal.svg"
+import leslie from "@/public/images/upgrades/upgrade_rhino.png"
 
-// Styles
-const GappedPage = styled(Page)`
-  gap: 4rem;
-  @media (max-width: ${({ theme }) => theme.breakpoints.l}) {
-    gap: 3rem;
-  }
-  * {
-    scroll-margin-top: 5.5rem;
-  }
-`
+const GappedPage = (props: ChildOnlyProp) => (
+  <MainArticle
+    className="mx-auto my-0 flex w-full scroll-mt-[5.5rem] flex-col items-center gap-12 lg:gap-16"
+    {...props}
+  />
+)
 
-const GappedContent = styled(Content)`
-  display: flex;
-  flex-direction: column;
-  gap: 3rem;
-  padding: 1rem 4rem;
-  @media (max-width: ${({ theme }) => theme.breakpoints.l}) {
-    gap: 2rem;
-    padding: 1rem 2rem;
-  }
-  @media (max-width: ${({ theme }) => theme.breakpoints.m}) {
-    padding: 1rem 0;
-  }
-`
+const GappedContent = (props: ChildOnlyProp) => (
+  <Flex
+    className="w-full flex-col gap-8 px-0 py-4 md:px-8 lg:gap-12 lg:px-16"
+    {...props}
+  />
+)
 
-const HeroContainer = styled.div`
-  background: ${({ theme }) => theme.colors.runNodeGradient};
-  width: 100%;
-`
+const Content = (props: HTMLAttributes<HTMLDivElement>) => (
+  <div className="w-full px-8 py-4" {...props} />
+)
 
-const Hero = styled(PageHero)`
-  padding-bottom: 2rem;
-`
+const TwoColumnContent = (props: ChildOnlyProp) => (
+  <Flex
+    className="mb-8 flex-col items-start justify-between gap-8 lg:flex-row lg:items-center"
+    {...props}
+  />
+)
 
-const TwoColumnContent = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-  gap: 2rem;
-  @media (max-width: ${({ theme }) => theme.breakpoints.l}) {
-    flex-direction: column;
-    align-items: flex-start;
-    margin-left: 0rem;
-    margin-right: 0rem;
-  }
-`
+const SplitContent = ({
+  className,
+  ...props
+}: HTMLAttributes<HTMLHeadingElement>) => (
+  <VStack className={cn("w-full gap-8 md:flex-row", className)} {...props} />
+)
 
-const SplitContent = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 2rem;
+const Column = (props: ChildOnlyProp) => <div className="flex-1" {...props} />
 
-  @media (max-width: ${({ theme }) => theme.breakpoints.m}) {
-    width: 100%;
-    flex-direction: column-reverse;
-  }
-`
+const SoftwareHighlight = ({
+  className,
+  ...props
+}: HTMLAttributes<HTMLHeadingElement>) => (
+  <Center
+    className={cn(
+      "relative isolate !ml-0 w-full flex-col-reverse gap-8 rounded-sm border border-border-high-contrast p-8 pe-16 ps-16 text-body after:absolute after:inset-0 after:-z-10 after:bg-inherit after:blur-xl after:content-[''] md:mx-24 md:flex-row",
+      className
+    )}
+    {...props}
+  />
+)
 
-const Column = styled.div`
-  flex: 1;
-`
+const ColumnFill = (props: ChildOnlyProp) => (
+  <div className="flex-1 list-none" {...props} />
+)
 
-const ResponsiveButtonLink = styled(ButtonLink)`
-  gap: 1rem;
-  padding-left: 2rem;
-  padding-right: 2rem;
+const ColumnNarrow = (props: ChildOnlyProp) => (
+  <Flex
+    className="inset-auto box-border items-center justify-center"
+    {...props}
+  />
+)
 
-  &:hover {
-    svg {
-      fill: ${({ theme }) => theme.colors.buttonColor};
-      transform: scale(1.15);
-      transition: 0.1s;
-    }
-  }
-  @media (max-width: ${({ theme }) => theme.breakpoints.s}) {
-    width: 100%;
-    justify-content: center;
-  }
-`
+const FlexContent = (props: ChildOnlyProp) => (
+  <Flex className="w-full flex-col px-8 py-4" {...props} />
+)
 
-const Highlight = styled(Content)<{ backgroundColor: string }>`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: ${({ theme, backgroundColor }) => theme.colors[backgroundColor]};
-  border: 1px solid #dadada;
-  box-sizing: border-box;
-  border-radius: 4px;
-  padding: 2rem 6rem;
-  color: ${({ theme }) => theme.colors.text};
-  position: relative;
-  isolation: isolate;
-  svg {
-    margin: 0 0 0 2rem;
-  }
-  &:nth-of-type(even) {
-    flex-direction: row-reverse;
-    svg {
-      margin: 0 2rem 0 0;
-    }
-  }
-  @media (max-width: ${({ theme }) => theme.breakpoints.m}) {
-    padding: 2rem;
-    flex-direction: column-reverse;
-    &:nth-of-type(even) {
-      flex-direction: column-reverse;
-      svg {
-        margin: 0 0 2rem;
-      }
-    }
-    svg {
-      margin: 0 0 2rem;
-    }
-  }
-  &::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    background: inherit;
-    filter: blur(1rem);
-  }
-`
+const FlexContainer = ({
+  className,
+  ...props
+}: HTMLAttributes<HTMLHeadingElement>) => (
+  <Flex className={cn("flex-col gap-8 lg:flex-row", className)} {...props} />
+)
 
-const SoftwareHighlight = styled(Highlight)``
+const MarginFlex = (props: ChildOnlyProp) => (
+  <FlexContainer className="my-12" {...props} />
+)
 
-const ColumnFill = styled.div`
-  line-height: 2;
-  box-sizing: border-box;
-  flex: 1;
-  ul {
-    list-style: none;
-  }
-  @media (max-width: ${({ theme }) => theme.breakpoints.m}) {
-    width: 100%;
-  }
-`
+const Container = ({
+  className,
+  ...props
+}: HTMLAttributes<HTMLHeadingElement>) => (
+  <Flex
+    className={cn(
+      "rounded-md border border-border-high-contrast bg-background-highlight px-8 py-0 text-body",
+      className
+    )}
+    {...props}
+  />
+)
 
-const ColumnNarrow = styled.div`
-  box-sizing: border-box;
-  display: flex;
-  inset: auto;
-  justify-content: center;
-  align-items: center;
-  @media (max-width: ${({ theme }) => theme.breakpoints.m}) {
-    width: 100%;
-  }
-`
+const BuildBox = ({
+  className,
+  ...props
+}: HTMLAttributes<HTMLHeadingElement>) => (
+  <Container
+    className={cn("flex-1 flex-col bg-background-highlight p-8", className)}
+    {...props}
+  />
+)
 
-const FlexContent = styled(Content)`
-  display: flex;
-  flex-direction: column;
-`
+const BuildBoxSpace = (props: ChildOnlyProp) => (
+  <BuildBox
+    className="justify-between duration-100 hover:scale-[102%]"
+    {...props}
+  />
+)
 
-const Flex = styled.div`
-  display: flex;
-  gap: 2rem;
-  @media (max-width: ${({ theme }) => theme.breakpoints.l}) {
-    flex-direction: column;
-  }
-`
+const FullyLoaded = (props: ChildOnlyProp) => (
+  <Container
+    className="flex-1 flex-col justify-between p-8 leading-loose duration-100 hover:scale-[102%]"
+    {...props}
+  />
+)
 
-const MarginFlex = styled(Flex)`
-  margin: 3rem 0;
-`
+const SvgTitle = (props: ChildOnlyProp) => (
+  <Flex className="items-center gap-4" {...props} />
+)
 
-const Container = styled.div`
-  background: ${({ theme }) => theme.colors.grayBackground};
-  border: 1px solid #d1d1d1;
-  box-sizing: border-box;
-  border-radius: 5px;
-  color: ${({ theme }) => theme.colors.text};
-  padding: 0 2rem;
-`
+const ButtonContainer = (props: ChildOnlyProp) => (
+  <Flex className="mt-auto flex-col gap-4 lg:flex-row" {...props} />
+)
 
-const BuildBox = styled(Container)`
-  background: ${({ theme }) => theme.colors.preBackground};
-  flex: 1;
-  padding: 2rem;
-  @media (max-width: ${({ theme }) => theme.breakpoints.m}) {
-    flex-direction: column;
-  }
+const BuildContainer = (props: ChildOnlyProp) => (
+  <Container
+    className="flex-col rounded-none border-none bg-inherit px-0 py-8 md:px-8"
+    {...props}
+  />
+)
 
-  & > p:last-of-type {
-    margin-bottom: 2rem;
-  }
-`
+const StakingCalloutContainer = (props: ChildOnlyProp) => (
+  <SplitContent className="bg-gradient-main p-8" {...props} />
+)
 
-const BuildBoxSpace = styled(BuildBox)`
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  &:hover {
-    transform: scale(1.02);
-    transition: transform 0.1s;
-  }
-`
+const H2 = (props: ChildOnlyProp) => (
+  <h2 className="mb-8 mt-12 leading-xs" {...props} />
+)
 
-const FullyLoaded = styled(Container)`
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  line-height: 200%;
-  padding: 2rem;
-  flex: 1;
-  p {
-    font-size: 110%;
-  }
-  code {
-    font-weight: 600;
-    line-height: 125%;
-  }
-  @media (max-width: ${({ theme }) => theme.breakpoints.l}) {
-    button {
-      width: fit-content;
-      padding-left: 2rem;
-      padding-right: 2rem;
-    }
-  }
-  @media (max-width: ${({ theme }) => theme.breakpoints.s}) {
-    button {
-      width: 100%;
-    }
-  }
-  &:hover {
-    transition: transform 0.1s;
-    transform: scale(1.02);
-  }
-`
+const H3 = ({ className, ...props }: HTMLAttributes<HTMLHeadingElement>) => (
+  <h3 className={cn("mb-8 mt-10 leading-xs", className)} {...props} />
+)
 
-const SvgTitle = styled.div`
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-`
+const H4 = (props: ChildOnlyProp) => (
+  <h4 className="my-8 leading-xs" {...props} />
+)
 
-const ButtonContainer = styled.div`
-  display: flex;
-  gap: 1rem;
-  margin-top: auto;
-  @media (max-width: ${({ theme }) => theme.breakpoints.l}) {
-    flex-direction: column;
-  }
-`
+const Text = ({ className, ...props }: HTMLAttributes<HTMLHeadingElement>) => (
+  <p className={cn("mb-6", className)} {...props} />
+)
 
-const DappNodeButtonLink = styled(ResponsiveButtonLink)`
-  background-color: #007dfc;
-  span {
-    color: ${({ theme }) => theme.colors.white};
-  }
-  &:hover {
-    background-color: #0077be;
-    box-shadow: 4px 4px 0 0 rgba(#007dfc, 0.47);
-  }
-`
+const Width60 = (props: ChildOnlyProp) => (
+  <div className="w-full flex-[3]" {...props} />
+)
 
-const AvadoButtonLink = styled(ResponsiveButtonLink)`
-  background-color: #37822e;
-  span {
-    color: ${({ theme }) => theme.colors.white};
-  }
-  &:hover {
-    background-color: #2e6d2e;
-    box-shadow: 4px 4px 0 0 rgba(#37822e, 0.47);
-  }
-`
+const Width40 = (props: ChildOnlyProp) => (
+  <Center className="w-full flex-[2]" {...props} />
+)
 
-const StyledEmoji = styled(Emoji)`
-  margin-right: 1rem;
-`
-
-const BuildContainer = styled(Container)`
-  flex: 1;
-  padding: 2rem;
-  border-radius: none;
-  border: none;
-  background: none;
-  @media (max-width: ${({ theme }) => theme.breakpoints.m}) {
-    padding: 2rem 0;
-  }
-`
-
-const ScrollButtonSecondary = styled.button`
-  text-decoration: none;
-  display: inline-block;
-  padding: 0.5rem 2rem;
-  margin-top: 1rem;
-  font-size: 1rem;
-  border-radius: 0.25em;
-  text-align: center;
-  cursor: pointer;
-
-  color: ${({ theme }) => theme.colors.text};
-  border: 1px solid ${({ theme }) => theme.colors.text};
-  background-color: transparent;
-  &:hover {
-    color: ${({ theme }) => theme.colors.primary};
-    border: 1px solid ${({ theme }) => theme.colors.primary};
-    box-shadow: ${({ theme }) => theme.colors.cardBoxShadow};
-  }
-  &:active {
-    background-color: ${({ theme }) =>
-      theme.colors.secondaryButtonBackgroundActive};
-  }
-  &:hover {
-    transition: transform 0.1s;
-    transform: scale(1.05);
-  }
-`
-
-const DiscordIcon = styled(Icon)`
-  fill: ${({ theme }) => theme.colors.buttonColor};
-`
-
-const StakingCalloutContainer = styled(SplitContent)`
-  background: linear-gradient(
-    262.78deg,
-    rgba(152, 186, 249, 0.25) 0%,
-    rgba(207, 177, 251, 0.25) 53.12%,
-    rgba(151, 252, 246, 0.25) 100%
-  );
-  width: 100%;
-  padding: 2rem;
-  gap: 5rem;
-  @media (max-width: ${({ theme }) => theme.breakpoints.m}) {
-    flex-direction: column;
-    gap: 3rem;
-  }
-`
-
-const Leslie = styled(GatsbyImage)`
-  transform: scaleX(-1) scale(1.15) translateX(2rem);
-  @media (max-width: ${({ theme }) => theme.breakpoints.l}) {
-    transform: scaleX(-1) translateY(-3rem);
-  }
-`
-
-const StrongParagraph = styled.p`
-  font-size: 150%;
-  font-weight: 600;
-`
-
-interface RunANodeCard {
-  image: typeof ChakraIcon
+type RunANodeCard = {
+  image: IconBaseType
   title: string
   preview: ReactNode
-  body: Array<string>
+  body: string[]
   alt: string
 }
 
-const RunANodePage = ({ data }: PageProps<Queries.RunANodePageQuery>) => {
-  const { t } = useTranslation()
+export const getStaticProps = (async ({ locale }) => {
+  const requiredNamespaces = getRequiredNamespacesForPage("/run-a-node")
+
+  const contentNotTranslated = !existsNamespace(locale!, requiredNamespaces[2])
+
+  const lastDeployDate = getLastDeployDate()
+  const lastDeployLocaleTimestamp = getLocaleTimestamp(
+    locale as Lang,
+    lastDeployDate
+  )
+
+  return {
+    props: {
+      ...(await serverSideTranslations(locale!, requiredNamespaces)),
+      contentNotTranslated,
+      lastDeployLocaleTimestamp,
+    },
+  }
+}) satisfies GetStaticProps<BasePageProps>
+
+const RunANodePage = () => {
+  const { t } = useTranslation("page-run-a-node")
   const heroContent = {
-    title: <Translation id="page-run-a-node-title" />,
-    header: <Translation id="page-run-a-node-hero-header" />,
-    subtitle: <Translation id="page-run-a-node-hero-subtitle" />,
-    image: getImage(data.ethereumInside)!,
+    title: t("page-run-a-node-title"),
+    header: <Translation id="page-run-a-node:page-run-a-node-hero-header" />,
+    subtitle: t("page-run-a-node-hero-subtitle"),
+    image: ethereumInside,
     alt: t("page-run-a-node-hero-alt"),
     buttons: [
       {
-        content: <Translation id="page-run-a-node-hero-cta-1" />,
+        content: t("page-run-a-node-hero-cta-1"),
         toId: "what-is-a-node",
-      },
-      {
-        content: <Translation id="page-run-a-node-hero-cta-2" />,
-        toId: "getting-started",
-        variant: "outline",
+        matomo: {
+          eventCategory: "run a node hero buttons",
+          eventAction: "click",
+          eventName: "learn more",
+        },
       },
     ],
   }
 
-  const whyRunANodeCards: Array<RunANodeCard> = [
+  const whyRunANodeCards: RunANodeCard[] = [
     {
       image: PrivacyGlyphIcon,
       title: t("page-run-a-node-privacy-title"),
@@ -443,7 +275,9 @@ const RunANodePage = ({ data }: PageProps<Queries.RunANodePageQuery>) => {
     {
       image: EarthGlyphIcon,
       title: t("page-run-a-node-participate-title"),
-      preview: <Translation id="page-run-a-node-participate-preview" />,
+      preview: (
+        <Translation id="page-run-a-node:page-run-a-node-participate-preview" />
+      ),
       body: [
         t("page-run-a-node-participate-1"),
         t("page-run-a-node-participate-2"),
@@ -485,154 +319,158 @@ const RunANodePage = ({ data }: PageProps<Queries.RunANodePageQuery>) => {
   return (
     <GappedPage>
       <PageMetadata
-        title={t("page-run-a-node-title")}
+        title={t("page-run-a-node-meta-title")}
         description={t("page-run-a-node-meta-description")}
+        image="/images/run-a-node/ethereum-inside.png"
       />
-      <HeroContainer>
-        <Hero content={heroContent} isReverse />
-      </HeroContainer>
+      <div className="w-full bg-gradient-to-br from-accent-b/5 via-primary/10 to-accent-b/15 dark:from-accent-b/20 dark:via-primary/15 dark:to-accent-a/20">
+        <div className="pb-8">
+          <PageHero content={heroContent} isReverse />
+        </div>
+      </div>
 
       <Content id="what-is-a-node">
         <TwoColumnContent>
           <Width60>
-            <h2>
-              <Translation id="page-run-a-node-what-title" />
-            </h2>
-            <h3>
-              <Translation id="page-run-a-node-what-1-subtitle" />
-            </h3>
-            <p>
-              <Translation id="page-run-a-node-what-1-text" />
-            </p>
-            <h3>
-              <Translation id="page-run-a-node-what-2-subtitle" />
-            </h3>
-            <p>
-              <Translation id="page-run-a-node-what-2-text" />
-            </p>
-            <h3>
-              <Translation id="page-run-a-node-what-3-subtitle" />
-            </h3>
-            <p>
-              <Translation id="page-run-a-node-what-3-text" />
-            </p>
+            <H2>
+              <Translation id="page-run-a-node:page-run-a-node-what-title" />
+            </H2>
+            <H3>{t("page-run-a-node-what-1-subtitle")}</H3>
+            <Text>{t("page-run-a-node-what-1-text")}</Text>
+            <H3>{t("page-run-a-node-what-2-subtitle")}</H3>
+            <Text>{t("page-run-a-node-what-2-text")}</Text>
+            <H3>{t("page-run-a-node-what-3-subtitle")}</H3>
+            <Text>{t("page-run-a-node-what-3-text")}</Text>
           </Width60>
           <Width40>
-            <GatsbyImage image={getImage(data.hackathon)!} alt="" />
+            <TwImage
+              src={hackathon}
+              alt=""
+              sizes="624px"
+              style={{ width: "624px", height: "auto" }}
+            />
           </Width40>
         </TwoColumnContent>
       </Content>
 
       <FlexContent>
-        <ExpandableInfo
-          alignSelf="center"
-          width={{ base: "full", md: "90%" }}
-          mb={{ base: 0, md: 4 }}
-          image={getImage(data.impact)!}
-          title={<Translation id="page-run-a-node-who-title" />}
-          contentPreview={<Translation id="page-run-a-node-who-preview" />}
-          background="runNodeGradient2"
-          forceOpen
+        <VStack
+          className={cn(
+            "relative mb-0 w-full gap-0 self-center rounded-sm border p-6 md:mb-4 md:w-[90%]",
+            "bg-gradient-to-br from-blue-500/20 from-10% to-pink-600/20 to-90%"
+          )}
         >
-          <p>
-            <Translation id="page-run-a-node-who-copy-1" />
-          </p>
-          <p>
-            <Translation id="page-run-a-node-who-copy-2" />
-          </p>
-          <p>
-            <Translation id="page-run-a-node-who-copy-3" />
-          </p>
-          <StrongParagraph>
-            <Translation id="page-run-a-node-who-copy-bold" />
-          </StrongParagraph>
-        </ExpandableInfo>
+          <Stack className="flex-col items-center justify-between gap-8 md:flex-row md:gap-12">
+            <TwImage
+              src={impact}
+              alt=""
+              sizes="300px"
+              style={{ width: "300px", height: "auto" }}
+            />
+            <div className="me-4">
+              <h2 className="mb-5 mt-4 text-2xl font-semibold leading-[1.4] md:text-[2rem]">
+                <Translation id="page-run-a-node:page-run-a-node-who-title" />
+              </h2>
+              <p className="body-medium mb-0">
+                <Translation id="page-run-a-node:page-run-a-node-who-preview" />
+              </p>
+            </div>
+          </Stack>
+          <div className="mt-8 border-t pt-6">
+            <p className="mb-6">
+              <Translation id="page-run-a-node:page-run-a-node-who-copy-1" />
+            </p>
+            <p className="mb-6">{t("page-run-a-node-who-copy-2")}</p>
+            <p className="mb-6">{t("page-run-a-node-who-copy-3")}</p>
+            <p className="mb-6 text-[150%] font-semibold leading-none">
+              {t("page-run-a-node-who-copy-bold")}
+            </p>
+          </div>
+        </VStack>
       </FlexContent>
 
       <Content>
-        <h2>
-          <Translation id="page-run-a-node-why-title" />
-        </h2>
+        <H2>
+          <Translation id="page-run-a-node:page-run-a-node-why-title" />
+        </H2>
         <InfoGrid>
-          {whyRunANodeCards.map(({ image, title, preview, body, alt }, idx) => {
-            return (
-              <ExpandableCard
-                contentPreview={preview}
-                title={title}
-                // TODO: make a11y svgs (using <title>)
-                // @ts-ignore
-                alt={alt}
-                svg={image}
-                key={idx}
-              >
-                {body.map((item, idx) => (
-                  <p key={idx}>{item}</p>
-                ))}
-              </ExpandableCard>
-            )
-          })}
+          {whyRunANodeCards.map(({ image, title, preview, body, alt }) => (
+            <ExpandableCard
+              contentPreview={preview}
+              title={title}
+              // TODO: make a11y svgs (using <title>)
+              // @ts-expect-error alt does not exist as a valid prop
+              alt={alt}
+              svg={image}
+              key={title}
+            >
+              {body.map((item) => (
+                <p key={item}>{item}</p>
+              ))}
+            </ExpandableCard>
+          ))}
         </InfoGrid>
       </Content>
 
       <Divider />
 
       <Content id="getting-started">
-        <h2>
-          <Translation id="page-run-a-node-getting-started-title" />
-        </h2>
+        <H2>{t("page-run-a-node-getting-started-title")}</H2>
         <GappedContent>
-          <SoftwareHighlight backgroundColor="homeBoxTurquoise">
+          <SoftwareHighlight className="bg-[#ccfcff] dark:bg-[#293233]">
             <ColumnFill>
-              <p>
-                <Translation id="page-run-a-node-getting-started-software-section-1" />
-              </p>
-              <p>
+              <Text>
+                {t("page-run-a-node-getting-started-software-section-1")}
+              </Text>
+              <Text>
                 <code>
-                  <StyledEmoji text=":warning:" size={1} />
-                  <Translation id="page-run-a-node-getting-started-software-section-1-alert" />
+                  <Emoji text=":warning:" className="me-4 text-md" />
+                  {t(
+                    "page-run-a-node-getting-started-software-section-1-alert"
+                  )}
                 </code>
-              </p>
-              <Link to="/developers/docs/nodes-and-clients/run-a-node/">
-                <Translation id="page-run-a-node-getting-started-software-section-1-link" />
-              </Link>
+              </Text>
+              <InlineLink href="/developers/docs/nodes-and-clients/run-a-node/">
+                {t("page-run-a-node-getting-started-software-section-1-link")}
+              </InlineLink>
             </ColumnFill>
             <ColumnNarrow>
               <Terminal
                 // TODO: make a11y svgs (using <title>)
-                // @ts-ignore
+                // @ts-expect-error alt does not exist as a valid prop
                 alt={t("page-run-a-node-glyph-alt-terminal")}
               />
             </ColumnNarrow>
           </SoftwareHighlight>
 
-          <SoftwareHighlight backgroundColor="homeBoxOrange">
-            <ColumnFill>
-              <p>
-                <Translation id="page-run-a-node-getting-started-software-section-2" />
-              </p>
-            </ColumnFill>
+          <SoftwareHighlight className="flex-col bg-[#FFE3D3] dark:bg-[#332821]">
             <ColumnNarrow>
               <Dappnode
                 // TODO: make a11y svgs (using <title>)
-                // @ts-ignore
+                // @ts-expect-error alt does not exist as a valid prop
                 alt={t("page-run-a-node-glyph-alt-dappnode")}
               />
             </ColumnNarrow>
+            <ColumnFill>
+              <Text>
+                <Translation id="page-run-a-node:page-run-a-node-getting-started-software-section-2" />
+              </Text>
+            </ColumnFill>
           </SoftwareHighlight>
 
-          <SoftwareHighlight backgroundColor="homeBoxPurple">
+          <SoftwareHighlight className="bg-[#E8E8FF] dark:bg-[#212132]">
             <ColumnFill>
-              <p>
-                <Translation id="page-run-a-node-getting-started-software-section-3a" />
-              </p>
-              <p>
-                <Translation id="page-run-a-node-getting-started-software-section-3b" />
-              </p>
+              <Text>
+                {t("page-run-a-node-getting-started-software-section-3a")}
+              </Text>
+              <Text>
+                <Translation id="page-run-a-node:page-run-a-node-getting-started-software-section-3b" />
+              </Text>
             </ColumnFill>
             <ColumnNarrow>
               <Dapptap
                 // TODO: make a11y svgs (using <title>)
-                // @ts-ignore
+                // @ts-expect-error alt does not exist as a valid prop
                 alt={t("page-run-a-node-glyph-alt-phone")}
               />
             </ColumnNarrow>
@@ -641,277 +479,251 @@ const RunANodePage = ({ data }: PageProps<Queries.RunANodePageQuery>) => {
       </Content>
 
       <Content>
-        <h2>
-          <Translation id="page-run-a-node-choose-your-adventure-title" />
-        </h2>
-        <p>
-          <Translation id="page-run-a-node-choose-your-adventure-1" />
-        </p>
-        <p>
-          <Translation id="page-run-a-node-choose-your-adventure-2" />
-        </p>
+        <H2>{t("page-run-a-node-choose-your-adventure-title")}</H2>
+        <Text>{t("page-run-a-node-choose-your-adventure-1")}</Text>
+        <Text>{t("page-run-a-node-choose-your-adventure-2")}</Text>
         <MarginFlex>
           <FullyLoaded>
             <div>
-              <h3>
-                <StyledEmoji text=":shopping_cart:" size={2} />
-                <Translation id="page-run-a-node-buy-fully-loaded-title" />
-              </h3>
-              <p>
-                <Translation id="page-run-a-node-buy-fully-loaded-description" />
-              </p>
+              <H3>
+                <Emoji text=":shopping_cart:" className="me-4 text-[2rem]" />
+                {t("page-run-a-node-buy-fully-loaded-title")}
+              </H3>
+              <Text>{t("page-run-a-node-buy-fully-loaded-description")}</Text>
               <ul>
-                <li>
-                  <Translation id="page-run-a-node-buy-fully-loaded-note-1" />
-                </li>
-                <li>
-                  <Translation id="page-run-a-node-buy-fully-loaded-note-2" />
-                </li>
-                <li>
-                  <code>
-                    <Translation id="page-run-a-node-buy-fully-loaded-note-3" />
-                  </code>
+                <li>{t("page-run-a-node-buy-fully-loaded-note-1")}</li>
+                <li>{t("page-run-a-node-buy-fully-loaded-note-2")}</li>
+                <li className="mb-0 font-bold">
+                  <code>{t("page-run-a-node-buy-fully-loaded-note-3")}</code>
                 </li>
               </ul>
             </div>
             <ButtonContainer>
-              <DappNodeButtonLink to="https://shop.dappnode.io/">
-                <Translation id="page-run-a-node-shop-dappnode" />
-              </DappNodeButtonLink>
-              <AvadoButtonLink to="https://ava.do/">
-                <Translation id="page-run-a-node-shop-avado" />
-              </AvadoButtonLink>
+              <ButtonLink href="https://shop.dappnode.io/">
+                {t("page-run-a-node-shop-dappnode")}
+              </ButtonLink>
+              <ButtonLink href="https://ava.do/">
+                {t("page-run-a-node-shop-avado")}
+              </ButtonLink>
             </ButtonContainer>
           </FullyLoaded>
 
           <FullyLoaded>
             <div>
-              <h3>
-                <StyledEmoji text=":building_construction:" size={2} />
-                <Translation id="page-run-a-node-build-your-own-title" />
-              </h3>
-              <p>
-                <Translation id="page-run-a-node-choose-your-adventure-build-1" />
-              </p>
+              <H3>
+                <Emoji
+                  text=":building_construction:"
+                  className="me-4 text-[2rem]"
+                />
+                {t("page-run-a-node-build-your-own-title")}
+              </H3>
+              <Text>{t("page-run-a-node-choose-your-adventure-build-1")}</Text>
               <ul>
                 <li>
-                  <Translation id="page-run-a-node-choose-your-adventure-build-bullet-1" />
+                  {t("page-run-a-node-choose-your-adventure-build-bullet-1")}
                 </li>
                 <li>
-                  <Translation id="page-run-a-node-choose-your-adventure-build-bullet-2" />
+                  {t("page-run-a-node-choose-your-adventure-build-bullet-2")}
                 </li>
-                <li>
-                  <Translation id="page-run-a-node-choose-your-adventure-build-bullet-3" />
+                <li className="mb-0">
+                  {t("page-run-a-node-choose-your-adventure-build-bullet-3")}
                 </li>
               </ul>
             </div>
-            <ScrollButtonSecondary
-              onClick={() => scrollIntoView("build-your-own")}
-            >
-              <Translation id="page-run-a-node-choose-your-adventure-build-start" />
-            </ScrollButtonSecondary>
+            <Button variant="outline" toId="build-your-own">
+              {t("page-run-a-node-choose-your-adventure-build-start")}
+            </Button>
           </FullyLoaded>
         </MarginFlex>
       </Content>
 
       <Content id="build-your-own">
-        <h2>
-          <Translation id="page-run-a-node-build-your-own-title" />
-        </h2>
+        <H2>{t("page-run-a-node-build-your-own-title")}</H2>
 
         <BuildContainer>
           <SvgTitle>
             <HardwareGlyphIcon
               // TODO: make a11y svgs (using <title>)
-              // @ts-ignore
+              // @ts-expect-error alt does not exist as a valid prop
               alt={t("page-run-a-node-glyph-alt-hardware")}
             />
-            <h3>
-              <Translation id="page-run-a-node-build-your-own-hardware-title" />
-            </h3>
+            <H3>{t("page-run-a-node-build-your-own-hardware-title")}</H3>
           </SvgTitle>
 
-          <Flex>
+          <FlexContainer>
             <BuildBox>
-              <h4>
-                <Translation id="page-run-a-node-build-your-own-minimum-specs" />
-              </h4>
+              <H4>{t("page-run-a-node-build-your-own-minimum-specs")}</H4>
               <ul>
                 <li>
-                  <p>
-                    <Translation id="page-run-a-node-build-your-own-min-ram" />
-                  </p>
-                  <p>
-                    <Link href="#plan-on-staking">
-                      <Translation id="page-run-a-node-build-your-own-ram-note-1" />
-                    </Link>
-                  </p>
-                  <p>
-                    <Link href="#rasp-pi">
-                      <Translation id="page-run-a-node-build-your-own-ram-note-2" />
-                    </Link>
-                  </p>
+                  <Text>{t("page-run-a-node-build-your-own-min-ram")}</Text>
+                  <Text>
+                    <InlineLink href="#plan-on-staking">
+                      {t("page-run-a-node-build-your-own-ram-note-1")}
+                    </InlineLink>
+                  </Text>
+                  <Text>
+                    <InlineLink href="#rasp-pi">
+                      {t("page-run-a-node-build-your-own-ram-note-2")}
+                    </InlineLink>
+                  </Text>
                 </li>
-                <li>
-                  <p>
-                    <Translation id="page-run-a-node-build-your-own-min-ssd" />
-                  </p>
-                  <p>
+                <li className="mb-0">
+                  <Text>{t("page-run-a-node-build-your-own-min-ssd")}</Text>
+                  <Text>
                     <small>
-                      <em>
-                        <Translation id="page-run-a-node-build-your-own-ssd-note" />
+                      <em className="mb-8">
+                        {t("page-run-a-node-build-your-own-ssd-note")}
                       </em>
                     </small>
-                  </p>
+                  </Text>
                 </li>
               </ul>
             </BuildBox>
 
             <BuildBox>
-              <h4>
-                <Translation id="page-run-a-node-build-your-own-recommended" />
-              </h4>
+              <H4>{t("page-run-a-node-build-your-own-recommended")}</H4>
               <ul>
                 <li>
-                  <Translation id="page-run-a-node-build-your-own-nuc" />
-                  <p>
+                  {t("page-run-a-node-build-your-own-nuc")}
+                  <Text>
                     <small>
-                      <Translation id="page-run-a-node-build-your-own-nuc-small" />
+                      {t("page-run-a-node-build-your-own-nuc-small")}
                     </small>
-                  </p>
+                  </Text>
                 </li>
                 <li>
-                  <Translation id="page-run-a-node-build-your-own-connection" />
-                  <p>
+                  {t("page-run-a-node-build-your-own-connection")}
+                  <Text>
                     <small>
-                      <Translation id="page-run-a-node-build-your-own-connection-small" />
+                      {t("page-run-a-node-build-your-own-connection-small")}
                     </small>
-                  </p>
+                  </Text>
                 </li>
-                <li>
-                  <Translation id="page-run-a-node-build-your-own-peripherals" />
-                  <p>
-                    <small>
-                      <Translation id="page-run-a-node-build-your-own-peripherals-small" />
+                <li className="mb-0">
+                  {t("page-run-a-node-build-your-own-peripherals")}
+                  <Text>
+                    <small className="mb-8">
+                      {t("page-run-a-node-build-your-own-peripherals-small")}
                     </small>
-                  </p>
+                  </Text>
                 </li>
               </ul>
             </BuildBox>
-          </Flex>
+          </FlexContainer>
         </BuildContainer>
 
         <BuildContainer>
           <SvgTitle>
             <DownloadGlyphIcon
               // TODO: make a11y svgs (using <title>)
-              // @ts-ignore
+              // @ts-expect-error alt does not exist as a valid prop
               alt={t("page-run-a-node-glyph-alt-software")}
             />
-            <h3>
-              <Translation id="page-run-a-node-build-your-own-software" />
-            </h3>
+            <H3>{t("page-run-a-node-build-your-own-software")}</H3>
           </SvgTitle>
 
-          <Flex>
+          <FlexContainer>
             <BuildBoxSpace>
               <div>
-                <h4>
-                  <Translation id="page-run-a-node-build-your-own-software-option-1-title" />
-                </h4>
-                <p>
-                  <Translation id="page-run-a-node-build-your-own-software-option-1-description" />
-                </p>
+                <H4>
+                  {t("page-run-a-node-build-your-own-software-option-1-title")}
+                </H4>
+                <Text>
+                  {t(
+                    "page-run-a-node-build-your-own-software-option-1-description"
+                  )}
+                </Text>
               </div>
               <ButtonContainer>
-                <DappNodeButtonLink to="https://docs.dappnode.io">
-                  <Translation id="page-run-a-node-build-your-own-software-option-1-button" />
-                </DappNodeButtonLink>
+                <ButtonLink href="https://docs.dappnode.io">
+                  {t("page-run-a-node-build-your-own-software-option-1-button")}
+                </ButtonLink>
               </ButtonContainer>
             </BuildBoxSpace>
 
             <BuildBoxSpace>
               <div>
-                <h4>
-                  <Translation id="page-run-a-node-build-your-own-software-option-2-title" />
-                </h4>
-                <p>
-                  <Translation id="page-run-a-node-build-your-own-software-option-2-description-1" />
-                </p>
-                <p>
-                  <Translation id="page-run-a-node-build-your-own-software-option-2-description-2" />
-                </p>
+                <H4>
+                  {t("page-run-a-node-build-your-own-software-option-2-title")}
+                </H4>
+                <Text>
+                  {t(
+                    "page-run-a-node-build-your-own-software-option-2-description-1"
+                  )}
+                </Text>
+                <Text>
+                  {t(
+                    "page-run-a-node-build-your-own-software-option-2-description-2"
+                  )}
+                </Text>
               </div>
               <ButtonContainer>
-                <ResponsiveButtonLink
-                  to="/developers/docs/nodes-and-clients/run-a-node/#spinning-up-node"
+                <ButtonLink
+                  href="/developers/docs/nodes-and-clients/run-a-node/#spinning-up-node"
                   variant="outline"
                 >
                   <code>
-                    <Translation id="page-run-a-node-build-your-own-software-option-2-button" />
+                    {t(
+                      "page-run-a-node-build-your-own-software-option-2-button"
+                    )}
                   </code>
-                </ResponsiveButtonLink>
+                </ButtonLink>
               </ButtonContainer>
             </BuildBoxSpace>
-          </Flex>
+          </FlexContainer>
         </BuildContainer>
       </Content>
 
       <Content>
-        <SplitContent>
+        <SplitContent className="flex-col-reverse md:flex-row">
           <Column>
-            <h2>
-              <Translation id="page-run-a-node-community-title" />
-            </h2>
-            <p>
-              <Translation id="page-run-a-node-community-description-1" />
-            </p>
-            <p>
-              <Translation id="page-run-a-node-community-description-2" />
-            </p>
+            <H2>{t("page-run-a-node-community-title")}</H2>
+            <Text>{t("page-run-a-node-community-description-1")}</Text>
+            <Text>{t("page-run-a-node-community-description-2")}</Text>
             <ButtonContainer>
-              <ResponsiveButtonLink to="https://discord.gg/c28an8dA5k">
-                <DiscordIcon name="discord" />
-                <Translation id="page-run-a-node-community-link-1" />
-              </ResponsiveButtonLink>
-              <ResponsiveButtonLink to="/community/online/" variant="outline">
-                <Translation id="page-run-a-node-community-link-2" />
-              </ResponsiveButtonLink>
+              <ButtonLink href="https://discord.com/invite/dappnode">
+                <FaDiscord />
+                {t("page-run-a-node-community-link-1")}
+              </ButtonLink>
+              <ButtonLink
+                href="/community/online/"
+                variant="outline"
+                isSecondary
+              >
+                {t("page-run-a-node-community-link-2")}
+              </ButtonLink>
             </ButtonContainer>
           </Column>
           <Column>
-            <GatsbyImage image={getImage(data.community)!} alt="" />
+            <TwImage
+              src={community}
+              alt=""
+              sizes="624px"
+              style={{ width: "624px", height: "auto" }}
+            />
           </Column>
         </SplitContent>
       </Content>
 
       <Content>
-        <h2>
-          <Translation id="page-run-a-node-further-reading-title" />
-        </h2>
+        <H2>{t("page-run-a-node-further-reading-title")}</H2>
         <ul>
           <li>
-            <Link to="https://github.com/ethereumbook/ethereumbook/blob/develop/03clients.asciidoc#should-i-run-a-full-node">
-              <Translation id="page-run-a-node-further-reading-1-link" />
-            </Link>{" "}
-            -{" "}
-            <i>
-              <Translation id="page-run-a-node-further-reading-1-author" />
-            </i>
+            <InlineLink href="https://github.com/ethereumbook/ethereumbook/blob/develop/03clients.asciidoc#should-i-run-a-full-node">
+              {t("page-run-a-node-further-reading-1-link")}
+            </InlineLink>{" "}
+            - <i>{t("page-run-a-node-further-reading-1-author")}</i>
           </li>
           <li>
-            <Link to="https://ethereum-on-arm-documentation.readthedocs.io/en/latest/">
-              <Translation id="page-run-a-node-further-reading-2-link" />
-            </Link>
+            <InlineLink href="https://ethereum-on-arm-documentation.readthedocs.io/en/latest/">
+              {t("page-run-a-node-further-reading-2-link")}
+            </InlineLink>
           </li>
           <li>
-            <Link to="https://vitalik.ca/general/2021/05/23/scaling.html">
-              <Translation id="page-run-a-node-further-reading-3-link" />
-            </Link>{" "}
-            -{" "}
-            <i>
-              <Translation id="page-run-a-node-further-reading-3-author" />
-            </i>
+            <InlineLink href="https://vitalik.eth.limo/general/2021/05/23/scaling.html">
+              {t("page-run-a-node-further-reading-3-link")}
+            </InlineLink>{" "}
+            - <i>{t("page-run-a-node-further-reading-3-author")}</i>
           </li>
         </ul>
       </Content>
@@ -920,75 +732,60 @@ const RunANodePage = ({ data }: PageProps<Queries.RunANodePageQuery>) => {
 
       <StakingCalloutContainer>
         <Column>
-          <Leslie image={getImage(data.leslie)!} alt="" />
+          <TwImage
+            className="-translate-y-12 -scale-x-100 transform lg:-translate-x-8 lg:translate-y-0 lg:scale-[115%] lg:-scale-x-[115%]"
+            src={leslie}
+            alt=""
+            sizes="624px"
+            style={{ width: "624px", height: "auto" }}
+          />
         </Column>
         <Column>
-          <h2>
-            <Translation id="page-run-a-node-staking-title" />
-          </h2>
-          <p>
-            <Translation id="page-run-a-node-staking-description" />
-          </p>
+          <H2>{t("page-run-a-node-staking-title")}</H2>
+          <Text>{t("page-run-a-node-staking-description")}</Text>
           <ButtonContainer>
-            <ResponsiveButtonLink to="/staking/">
-              <Translation id="page-run-a-node-staking-link" />
-            </ResponsiveButtonLink>
+            <ButtonLink href="/staking/">
+              {t("page-run-a-node-staking-link")}
+            </ButtonLink>
           </ButtonContainer>
         </Column>
       </StakingCalloutContainer>
       <Content>
-        <h3 id="plan-on-staking">
-          <StyledEmoji text=":cut_of_meat:" size={2} />
-          <Translation id="page-run-a-node-staking-plans-title" />
-        </h3>
-        <p>
-          <Translation id="page-run-a-node-staking-plans-description" />
-        </p>
-        <p>
-          <Translation id="page-run-a-node-staking-plans-ethstaker-link-description" />{" "}
-          -{" "}
-          <Link to="https://youtu.be/C2wwu1IlhDc">
-            <Translation id="page-run-a-node-staking-plans-ethstaker-link-label" />
-          </Link>
-        </p>
-        <h3 id="rasp-pi">
-          <StyledEmoji text=":pie:" size={2} />
-          <Translation id="page-run-a-node-rasp-pi-title" />
-        </h3>
-        <p>
-          <Translation id="page-run-a-node-rasp-pi-description" />
-        </p>
+        <H3 id="plan-on-staking" className="flex items-center">
+          <Emoji text=":cut_of_meat:" className="me-4 text-[2rem]" />
+          {t("page-run-a-node-staking-plans-title")}
+        </H3>
+        <Text>
+          <Translation id="page-run-a-node:page-run-a-node-staking-plans-description" />
+        </Text>
+        <Text>
+          {t("page-run-a-node-staking-plans-ethstaker-link-description")} -{" "}
+          <InlineLink href="https://youtu.be/C2wwu1IlhDc">
+            {t("page-run-a-node-staking-plans-ethstaker-link-label")}
+          </InlineLink>
+        </Text>
+        <H3 id="rasp-pi" className="flex items-center">
+          <Emoji text=":pie:" className="me-4 text-[2rem]" />
+          {t("page-run-a-node-rasp-pi-title")}
+        </H3>
+        <Text>{t("page-run-a-node-rasp-pi-description")}</Text>
         <ul>
           <li>
-            <Link to="https://docs.dappnode.io/user/quick-start/Core/installation#arm">
-              <Translation id="page-run-a-node-rasp-pi-note-1-link" />
-            </Link>{" "}
-            -{" "}
-            <i>
-              <Translation id="page-run-a-node-rasp-pi-note-1-description" />
-            </i>
+            <InlineLink href="https://ethereum-on-arm-documentation.readthedocs.io/en/latest">
+              {t("page-run-a-node-rasp-pi-note-2-link")}
+            </InlineLink>{" "}
+            - <i>{t("page-run-a-node-rasp-pi-note-2-description")}</i>
           </li>
           <li>
-            <Link to="https://ethereum-on-arm-documentation.readthedocs.io/en/latest">
-              <Translation id="page-run-a-node-rasp-pi-note-2-link" />
-            </Link>{" "}
-            -{" "}
-            <i>
-              <Translation id="page-run-a-node-rasp-pi-note-2-description" />
-            </i>
-          </li>
-          <li>
-            <Link to="/developers/tutorials/run-node-raspberry-pi">
-              <Translation id="page-run-a-node-rasp-pi-note-3-link" />
-            </Link>{" "}
-            -{" "}
-            <i>
-              <Translation id="page-run-a-node-rasp-pi-note-3-description" />
-            </i>
+            <InlineLink href="/developers/tutorials/run-node-raspberry-pi">
+              {t("page-run-a-node-rasp-pi-note-3-link")}
+            </InlineLink>{" "}
+            - <i>{t("page-run-a-node-rasp-pi-note-3-description")}</i>
           </li>
         </ul>
       </Content>
       <Content>
+        <QuizWidget quizKey="run-a-node" />
         <FeedbackCard />
       </Content>
     </GappedPage>
@@ -996,74 +793,3 @@ const RunANodePage = ({ data }: PageProps<Queries.RunANodePageQuery>) => {
 }
 
 export default RunANodePage
-
-export const query = graphql`
-  query RunANodePage($languagesToFetch: [String!]!) {
-    locales: allLocale(
-      filter: {
-        language: { in: $languagesToFetch }
-        ns: { in: ["page-run-a-node", "common"] }
-      }
-    ) {
-      edges {
-        node {
-          ns
-          data
-          language
-        }
-      }
-    }
-    ethereumInside: file(
-      relativePath: { eq: "run-a-node/ethereum-inside.png" }
-    ) {
-      childImageSharp {
-        gatsbyImageData(
-          width: 624
-          layout: CONSTRAINED
-          placeholder: BLURRED
-          quality: 100
-        )
-      }
-    }
-    hackathon: file(relativePath: { eq: "hackathon_transparent.png" }) {
-      childImageSharp {
-        gatsbyImageData(
-          width: 624
-          layout: CONSTRAINED
-          placeholder: BLURRED
-          quality: 100
-        )
-      }
-    }
-    impact: file(relativePath: { eq: "impact_transparent.png" }) {
-      childImageSharp {
-        gatsbyImageData(
-          width: 300
-          layout: CONSTRAINED
-          placeholder: BLURRED
-          quality: 100
-        )
-      }
-    }
-    community: file(relativePath: { eq: "enterprise-eth.png" }) {
-      childImageSharp {
-        gatsbyImageData(
-          width: 624
-          layout: CONSTRAINED
-          placeholder: BLURRED
-          quality: 100
-        )
-      }
-    }
-    leslie: file(relativePath: { eq: "upgrades/upgrade_rhino.png" }) {
-      childImageSharp {
-        gatsbyImageData(
-          width: 624
-          layout: CONSTRAINED
-          placeholder: BLURRED
-          quality: 100
-        )
-      }
-    }
-  }
-`

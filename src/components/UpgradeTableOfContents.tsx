@@ -1,126 +1,64 @@
-import React, { useRef } from "react"
-import { Box, List, ListItem } from "@chakra-ui/react"
-import Link from "./Link"
-import { Item as TableOfContentsItem } from "./TableOfContents"
+import type { ToCItem } from "@/lib/types"
 
-const customIdRegEx = /^.+(\s*\{#([A-Za-z0-9\-_]+?)\}\s*)$/
+import { ItemsListProps } from "@/components/TableOfContents/ItemsList"
+import { BaseLink } from "@/components/ui/Link"
 
-const slugify = (s: string): string =>
-  encodeURIComponent(String(s).trim().toLowerCase().replace(/\s+/g, "-"))
+import { cn } from "@/lib/utils/cn"
+import { trimmedTitle } from "@/lib/utils/toc"
 
-const getCustomId = (title: string): string => {
-  const match = customIdRegEx.exec(title)
-  if (match) {
-    return match[2].toLowerCase()
-  }
-  console.warn("Missing custom ID on header: ", title)
-  return slugify(title)
+export type TableOfContentsLinkProps = {
+  item: ToCItem
 }
 
-const trimmedTitle = (title: string): string => {
-  const match = customIdRegEx.exec(title)
-  return match ? title.replace(match[1], "").trim() : title
-}
-
-export interface Item extends TableOfContentsItem {
-  id?: string
-}
-
-const TableOfContentsLink: React.FC<{ item: Item }> = (props) => {
-  const { item } = props
-
-  const idString = useRef("")
-
-  if (!!item.id) {
-    idString.current = item.id
-  } else {
-    idString.current = item.title
-  }
-
-  const url = `#${getCustomId(idString.current)}`
-
+const TableOfContentsLink = ({
+  item: { title, url },
+}: TableOfContentsLinkProps) => {
   let isActive = false
   if (typeof window !== `undefined`) {
     isActive = window.location.hash === url
   }
 
-  let classes = ""
-  if (isActive) {
-    classes += " active"
-  }
-
   return (
-    <Link
-      to={url}
-      className={classes}
-      position="relative"
-      display="inline-block"
-      // `li :last-child` global selector wants to override this without `!important`
-      mb="0.5rem !important"
-      color="text300"
+    <BaseLink
+      href={url}
+      className={cn(
+        "relative !mb-4 inline-block text-xl font-normal text-gray-500 no-underline hover:text-primary hover:no-underline dark:text-gray-400",
+        isActive && "text-primary"
+      )}
     >
-      {trimmedTitle(item.title)}
-    </Link>
+      {trimmedTitle(title)}
+    </BaseLink>
   )
 }
 
-interface IPropsItemsList {
-  items: Array<Item>
-  depth: number
-  maxDepth: number
-}
-
-const ItemsList: React.FC<IPropsItemsList> = ({ items, depth, maxDepth }) => {
-  if (depth > maxDepth || !items) {
-    return null
-  }
+const ItemsList = ({ items, depth, maxDepth }: ItemsListProps) => {
+  // Return early if maxDepth hit, or if no items
+  if (depth > maxDepth || !items) return null
   return (
     <>
       {items.map((item, index) => (
-        <ListItem m={0} key={index}>
+        <li key={index} className="m-0">
           <TableOfContentsLink item={item} />
-        </ListItem>
+        </li>
       ))}
     </>
   )
 }
 
-function UpgradeTableOfContents(props: {
-  items: Array<{ id: string; title: string }>
-}): JSX.Element
-function UpgradeTableOfContents(props: {
-  maxDepth: number
-  items: Array<TableOfContentsItem>
-}): JSX.Element
-function UpgradeTableOfContents(props: {
+type UpgradeTableOfContentsProps = {
+  items: ToCItem[]
   maxDepth?: number
-  items: Array<Item>
-}) {
-  const { items, maxDepth = 1 } = props
-
-  return (
-    <Box
-      as="nav"
-      p={0}
-      mb={8}
-      textAlign="end"
-      overflowY="auto"
-      display={{ base: "none", l: "block" }}
-    >
-      <List
-        m={0}
-        py={0}
-        ps={4}
-        pe={1}
-        fontSize="xl"
-        fontWeight="normal"
-        lineHeight="1.6"
-        styleType="none"
-      >
-        <ItemsList items={items} depth={0} maxDepth={maxDepth} />
-      </List>
-    </Box>
-  )
 }
+
+const UpgradeTableOfContents = ({
+  items,
+  maxDepth = 1,
+}: UpgradeTableOfContentsProps) => (
+  <nav className="mb-8 hidden overflow-y-auto p-0 lg:block">
+    <ul className="m-0 py-0 leading-relaxed">
+      <ItemsList items={items} depth={0} maxDepth={maxDepth} />
+    </ul>
+  </nav>
+)
 
 export default UpgradeTableOfContents

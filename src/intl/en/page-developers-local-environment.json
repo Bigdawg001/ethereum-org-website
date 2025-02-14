@@ -1,6 +1,8 @@
 {
   "page-local-environment-brownie-desc": "A Python-based development and testing framework for smart contracts targeting the Ethereum Virtual Machine.",
   "page-local-environment-brownie-logo-alt": "Brownie logo",
+  "page-local-environment-kurtosis-desc": "A container-based toolkit for easily configuring and spinning up a multi-client Ethereum testnet for rapid local dApp development, prototyping, and testing.",
+  "page-local-environment-kurtosis-logo-alt": "Kurtosis logo",
   "page-local-environment-epirus-desc": "A platform for developing, deploying and monitoring blockchain applications on the Java Virtual Machine.",
   "page-local-environment-epirus-logo-alt": "Epirus logo",
   "page-local-environment-eth-app-desc": "Create Ethereum-powered apps with one command. Comes with a wide offerring of UI frameworks and DeFi templates to choose from.",
@@ -28,8 +30,6 @@
   "page-local-environment-setup-title": "Set up your local development environment",
   "page-local-environment-solidity-template-desc": "A GitHub template for a pre-built setup for your Solidity smart contracts. Includes a Hardhat local network, Waffle for tests, Ethers for wallet implementation, and more.",
   "page-local-environment-solidity-template-logo-alt": "Solidity template logo",
-  "page-local-environment-truffle-desc": "The Truffle Suite gets developers from idea to dapp as comfortably as possible.",
-  "page-local-environment-truffle-logo-alt": "Truffle logo",
   "page-local-environment-waffle-desc": "The most advanced testing lib for smart contracts. Use alone or with Scaffold-eth or Hardhat.",
   "page-local-environment-waffle-logo-alt": "Waffle logo"
 }

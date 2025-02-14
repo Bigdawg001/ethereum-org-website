@@ -1,44 +1,19 @@
-import { Badge } from "@chakra-ui/react"
 import React from "react"
 
-// Represent string as 32-bit integer
-const hashCode = (string) => {
-  let hash = 0
-  for (const char of string) {
-    const code = char.charCodeAt(0)
-    hash = (hash << 5) - hash + code
-    hash |= 0
-  }
-  return Math.abs(hash)
-}
+import { Tag } from "./ui/tag"
 
-// Theme variables from Theme.js
-const colors = [
-  "tagBlue",
-  "tagOrange",
-  "tagGreen",
-  "tagRed",
-  "tagTurquoise",
-  "tagGray",
-  "tagYellow",
-  "tagMint",
-  "tagPink",
-] as const
-
-export interface IProps {
+export type TutorialTagsProps = {
   tags: Array<string>
 }
 
-const TutorialTags: React.FC<IProps> = ({ tags }) => {
+const TutorialTags = ({ tags }: TutorialTagsProps) => {
   return (
     <>
       {tags.map((tag, idx) => {
-        const tagColorIdx = hashCode(tag) % colors.length
-        const tagColor = colors[tagColorIdx]
         return (
-          <Badge key={idx} me={2} mb={2} background={tagColor}>
+          <Tag key={idx} className="mb-2 me-2" status="tag">
             {tag}
-          </Badge>
+          </Tag>
         )
       })}
     </>
